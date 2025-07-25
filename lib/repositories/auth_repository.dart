@@ -15,7 +15,7 @@ class AuthRepository {
   Future<String?> loginAndGetToken(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/auth/'),
+        Uri.parse('$baseUrl/api/auth/login/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );
