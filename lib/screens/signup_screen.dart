@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'signin_screen.dart';
+import '../services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -15,6 +17,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _confirmPasswordController = TextEditingController();
   bool _obscureTextPassword = true;
   bool _obscureTextConfirmPassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -23,6 +26,50 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleSignUp() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    final auth = Provider.of<AuthService>(context, listen: false);
+
+    final success = await auth.register(
+      name: name,
+      email: email,
+      password: password,
+    );
+    setState(() => _isLoading = false);
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration successful, please sign in.')),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const SignInScreen()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(auth.errorMessage ?? 'Registration failed')),
+      );
+    }
   }
 
   @override
@@ -39,7 +86,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 // Tombol back dan judul
                 Row(
                   children: [
-                    // Tombol back
                     Padding(
                       padding: const EdgeInsets.only(top: 10.0),
                       child: InkWell(
@@ -61,8 +107,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                       ),
                     ),
-                    
-                    // Judul "Sign Up" di tengah
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(top: 10.0),
@@ -77,14 +121,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                       ),
                     ),
-                    
-                    // Widget kosong untuk menjaga keseimbangan layout
-                    SizedBox(width: 40),
+                    const SizedBox(width: 40),
                   ],
                 ),
-                
                 const SizedBox(height: 30),
-                
                 // Card untuk form sign up
                 Container(
                   width: double.infinity,
@@ -108,7 +148,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Judul "Create an Account"
                       const Text(
                         'Create an Account',
                         style: TextStyle(
@@ -117,9 +156,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           fontFamily: 'Poppins',
                         ),
                       ),
-                      
                       const SizedBox(height: 20),
-                      
                       // Form nama lengkap
                       Container(
                         decoration: BoxDecoration(
@@ -146,9 +183,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                       ),
-                      
                       const SizedBox(height: 16),
-                      
                       // Form email
                       Container(
                         decoration: BoxDecoration(
@@ -176,9 +211,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                       ),
-                      
                       const SizedBox(height: 16),
-                      
                       // Form password
                       Container(
                         decoration: BoxDecoration(
@@ -217,9 +250,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                       ),
-                      
                       const SizedBox(height: 16),
-                      
                       // Form konfirmasi password
                       Container(
                         decoration: BoxDecoration(
@@ -258,10 +289,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                       ),
-                      
                       const SizedBox(height: 20),
-                      
-                      // Teks persyaratan
                       Center(
                         child: Text(
                           'By Creating an account you agree to our\nTerms of Service and Privacy Policy',
@@ -276,41 +304,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ],
                   ),
                 ),
-                
                 const SizedBox(height: 30),
-                
                 // Tombol Sign Up
                 SizedBox(
                   width: double.infinity,
                   height: 50,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Implementasi sign up
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SignInScreen(),
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ElevatedButton(
+                          onPressed: _handleSignUp,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2ECC71),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          child: const Text(
+                            'Sign Up',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2ECC71),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: const Text(
-                      'Sign Up',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                  ),
                 ),
-                
                 const SizedBox(height: 20),
               ],
             ),

@@ -1,21 +1,17 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../repositories/auth_repository.dart';
-import 'google_auth_service.dart';
 import 'shared_prefs_service.dart';
 
 class AuthService extends ChangeNotifier {
   final AuthRepository _authRepository;
-  final GoogleAuthService _googleAuthService;
   final SharedPrefsService _prefsService;
 
   UserModel? _currentUser;
   bool _isLoading = false;
   String? _errorMessage;
 
-  // Getters
   UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isLoggedIn => _currentUser != null;
@@ -23,58 +19,37 @@ class AuthService extends ChangeNotifier {
 
   AuthService({
     required AuthRepository authRepository,
-    required GoogleAuthService googleAuthService,
     SharedPrefsService? prefsService,
-  }) : _authRepository = authRepository,
-       _googleAuthService = googleAuthService,
-       _prefsService = prefsService ?? SharedPrefsService() {
-    // Auto-load user data jika tersedia di local storage
-    _loadUserFromPrefs();
-  }
+  })  : _authRepository = authRepository,
+        _prefsService = prefsService ?? SharedPrefsService();
 
-  // Inisialisasi - cek apakah user sudah login
-  Future<void> init() async {
-    await _loadUserFromPrefs();
-  }
-
-  // Load user dari SharedPreferences
-  Future<void> _loadUserFromPrefs() async {
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      final userJson = await _prefsService.getCurrentUser();
-      if (userJson != null) {
-        _currentUser = UserModel.fromJson(jsonDecode(userJson));
-      }
-    } catch (e) {
-      _errorMessage = 'Error loading user data';
-      print('Error loading user data: ${e.toString()}');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  // Login dengan email dan password
-  Future<bool> signInWithEmailPassword(String email, String password) async {
+  // Login: dapatkan token, simpan, fetch profile
+  Future<bool> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final response = await _authRepository.signInWithEmailPassword(email, password);
-      
-      if (response.success) {
-        await _loadUserFromPrefs();
-        return true;
+      final token = await _authRepository.loginAndGetToken(email, password);
+      if (token != null) {
+        await _prefsService.saveToken(token);
+        // Fetch profile dengan token
+        final profile = await _authRepository.fetchProfile(token);
+        if (profile != null) {
+          _currentUser = profile;
+          _errorMessage = null;
+          notifyListeners();
+          return true;
+        } else {
+          _errorMessage = 'Failed to fetch user profile.';
+        }
       } else {
-        _errorMessage = response.message ?? 'Failed to sign in';
-        return false;
+        _errorMessage = 'Login failed. Email or password incorrect.';
       }
+      return false;
     } catch (e) {
-      _errorMessage = 'An error occurred during sign in';
-      print('Sign in error: ${e.toString()}');
+      _errorMessage = 'An error occurred during login.';
+      print('Login error: $e');
       return false;
     } finally {
       _isLoading = false;
@@ -82,52 +57,20 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  // Register dengan email dan password
-  Future<bool> signUpWithEmailPassword(String name, String email, String password) async {
+  // Cek login saat startup
+  Future<void> loadUserFromPrefs() async {
     _isLoading = true;
-    _errorMessage = null;
     notifyListeners();
-
     try {
-      final response = await _authRepository.signUpWithEmailPassword(name, email, password);
-      
-      if (response.success) {
-        await _loadUserFromPrefs();
-        return true;
-      } else {
-        _errorMessage = response.message ?? 'Failed to sign up';
-        return false;
+      final token = await _prefsService.getToken();
+      if (token != null) {
+        final profile = await _authRepository.fetchProfile(token);
+        if (profile != null) {
+          _currentUser = profile;
+        }
       }
     } catch (e) {
-      _errorMessage = 'An error occurred during registration';
-      print('Sign up error: ${e.toString()}');
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  // Login dengan Google
-  Future<bool> signInWithGoogle() async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    try {
-      final response = await _googleAuthService.signInWithGoogle();
-      
-      if (response.success) {
-        await _loadUserFromPrefs();
-        return true;
-      } else {
-        _errorMessage = response.message ?? 'Failed to sign in with Google';
-        return false;
-      }
-    } catch (e) {
-      _errorMessage = 'An error occurred during Google sign in';
-      print('Google sign in error: ${e.toString()}');
-      return false;
+      print('Error load user: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -138,45 +81,51 @@ class AuthService extends ChangeNotifier {
   Future<void> signOut() async {
     _isLoading = true;
     notifyListeners();
-
     try {
-      // Sign out from repository
-      await _authRepository.signOut();
-      
-      // Sign out from Google if using Google Sign-In
-      if (_currentUser?.authProvider == AuthProvider.google) {
-        await _googleAuthService.signOut();
-      }
-      
-      // Clear user data
+      await _prefsService.removeToken();
       _currentUser = null;
     } catch (e) {
-      _errorMessage = 'Error signing out';
-      print('Sign out error: ${e.toString()}');
+      print('Sign out error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // Refresh user profile data
-  Future<void> refreshUserProfile() async {
+  Future<bool> register({
+    required String name,
+    required String email,
+    required String password,
+    String? role,
+    String? phone,
+    String? address,
+  }) async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
-      final user = await _authRepository.getUserProfile();
-      if (user != null) {
-        _currentUser = user;
+      final success = await _authRepository.register(
+        name: name,
+        email: email,
+        password: password,
+      );
+      if (success) {
+        return true;
+      } else {
+        _errorMessage = "Registration failed";
+        return false;
       }
     } catch (e) {
-      _errorMessage = 'Error refreshing user profile';
-      print('Error refreshing user profile: ${e.toString()}');
+      _errorMessage = "Error during registration";
+      print('Register error: $e');
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
+
 
   // Reset error
   void resetError() {

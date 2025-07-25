@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'signin_screen.dart';
 import 'signup_screen.dart';
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -51,12 +52,10 @@ class LoginScreen extends StatelessWidget {
             ),
           ),
 
-          // Konten halaman di bawah dengan padding
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               children: [
-                // Teks "Giziku solusi untuk"
                 const Text(
                   'Giziku solusi untuk',
                   style: TextStyle(
@@ -69,7 +68,6 @@ class LoginScreen extends StatelessWidget {
                 
                 const SizedBox(height: 8),
                 
-                // Teks "Makan Sehat, Hidup Hemat."
                 const Text(
                   'Makan Sehat, Hidup Hemat.',
                   style: TextStyle(
@@ -82,7 +80,6 @@ class LoginScreen extends StatelessWidget {
                 
                 const SizedBox(height: 50),
                 
-                // Tombol "Sign In"
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -115,7 +112,6 @@ class LoginScreen extends StatelessWidget {
                 
                 const SizedBox(height: 20),
                 
-                // Teks "Or sign up" dengan garis
                 Row(
                   children: [
                     Expanded(
@@ -146,7 +142,6 @@ class LoginScreen extends StatelessWidget {
                 
                 const SizedBox(height: 20),
                 
-                // Tombol "Sign up" (outline)
                 SizedBox(
                   width: double.infinity,
                   height: 50,
