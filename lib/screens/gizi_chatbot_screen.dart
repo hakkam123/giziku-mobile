@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import '../../models/chat_message.dart';
+import '../../widgets/chat_bubble.dart';
 
 class GizikuChatbotScreen extends StatefulWidget {
   const GizikuChatbotScreen({super.key});
@@ -11,31 +14,65 @@ class _GizikuChatbotScreenState extends State<GizikuChatbotScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  // List of chat bubbles: each item is a map {'fromUser': bool, 'text': string}
-  final List<Map<String, dynamic>> _messages = [];
+  List<ChatMessage> _messages = [];
+  bool _isTyping = false;
 
-  void _sendChat() {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
+  @override
+  void initState() {
+    super.initState();
+    _addBotMessage("Halo! Aku GiziBot dari Giziku 🤖\nAku bisa bantu rekomendasi makanan sehat sesuai kondisi kamu!");
+  }
+
+  void _addBotMessage(String content) {
     setState(() {
-      _messages.add({'fromUser': true, 'text': text});
-      _controller.clear();
-    });
-    // Simulate bot reply
-    Future.delayed(const Duration(milliseconds: 600), () {
-      setState(() {
-        _messages.add({'fromUser': false, 'text': "Halo! Ini Gizi Bot."});
-        _scrollToBottom();
-      });
+      _messages.add(ChatMessage(
+        id: '',
+        role: 'bot',
+        content: content,
+        createdAt: DateTime.now(),
+      ));
+      _isTyping = false;
     });
     _scrollToBottom();
+  }
+
+  Future<void> _sendMessage([String? customText]) async {
+    final message = (customText ?? _controller.text).trim();
+    if (message.isEmpty) return;
+
+    setState(() {
+      _messages.add(ChatMessage(
+        id: '',
+        role: 'user',
+        content: message,
+        createdAt: DateTime.now(),
+      ));
+      _controller.clear();
+      _isTyping = true;
+    });
+    _scrollToBottom();
+
+    await Future.delayed(const Duration(seconds: 1)); // efek delay bot
+
+    String reply;
+    if (message.toLowerCase().contains('makan')) {
+      reply = "Coba deh konsumsi sayur hijau, ikan, dan buah lokal 🍎🐟\nMau resep sederhana?";
+    } else if (message.toLowerCase().contains('malnutrisi')) {
+      reply = "Malnutrisi bisa dicegah dengan pola makan seimbang dan pemantauan berat badan.";
+    } else if (message.toLowerCase().contains('halo') || message.toLowerCase().contains('hai')) {
+      reply = "Hai juga! 👋 Ada yang bisa aku bantu?";
+    } else {
+      reply = "Hmm... aku masih belajar nih, bisa coba tanya yang lain?";
+    }
+
+    _addBotMessage(reply);
   }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
+          _scrollController.position.maxScrollExtent + 100,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
@@ -44,163 +81,61 @@ class _GizikuChatbotScreenState extends State<GizikuChatbotScreen> {
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  Widget _bubble(bool fromUser, String text) {
-    return Align(
-      alignment: fromUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        constraints: const BoxConstraints(maxWidth: 270),
-        decoration: BoxDecoration(
-          color: fromUser ? const Color(0xFF2ECC71) : const Color(0xFFF7FDFC),
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(18),
-            topRight: const Radius.circular(18),
-            bottomLeft: Radius.circular(fromUser ? 18 : 6),
-            bottomRight: Radius.circular(fromUser ? 6 : 18),
-          ),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14,
-            color: fromUser ? Colors.white : const Color(0xFF222222),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF2ECC71),
-      body: Column(
-        children: [
-          // Header
-          Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              color: Color(0xFF2ECC71),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(-32),
-                bottomRight: Radius.circular(-32),
-              ),
-            ),
-            padding: const EdgeInsets.only(top: 48, bottom: 10),
-            child: Column(
-              children: [
-                // Avatar
-                Container(
-                  width: 78,
-                  height: 78,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 4),
-                  ),
-                  child: const CircleAvatar(
-                    radius: 36,
-                    backgroundImage: AssetImage('logobot.png'), 
-                    backgroundColor: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  "Gizi Bot",
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Chat area
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              color: Colors.white,
+      appBar: AppBar(title: const Text("Giziku Chatbot")),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
               child: ListView.builder(
                 controller: _scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                itemCount: _messages.length,
-                itemBuilder: (context, idx) {
-                  final msg = _messages[idx];
-                  return _bubble(msg['fromUser'], msg['text']);
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: _messages.length + (_isTyping ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == _messages.length && _isTyping) {
+                    return const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Text("Bot sedang mengetik..."),
+                    );
+                  }
+                  return ChatBubble(message: _messages[index]);
                 },
               ),
             ),
-          ),
-          // Bottom input bar
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                // Plus button
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF7FDFC),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.add, color: Color(0xFF2ECC71), size: 24),
-                    onPressed: () {},
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Input field
-                Expanded(
-                  child: Container(
-                    height: 40,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF7FDFC),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Expanded(
                     child: TextField(
                       controller: _controller,
-                      style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
-                      decoration: const InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                        border: InputBorder.none,
-                        hintText: "Ketik pesan...",
-                        hintStyle: TextStyle(fontFamily: 'Poppins'),
+                      decoration: InputDecoration(
+                        hintText: "Tulis pesan...",
+                        filled: true,
+                        fillColor: Colors.grey[100],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                       ),
-                      onSubmitted: (_) => _sendChat(),
+                      onSubmitted: (_) => _sendMessage(),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                // Send button
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2ECC71),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.send, color: Colors.white, size: 22),
-                    onPressed: _sendChat,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _sendMessage,
+                    child: const CircleAvatar(
+                      backgroundColor: Color(0xFF45B1F9),
+                      child: Icon(Icons.send, color: Colors.white),
+                    ),
+                  )
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }

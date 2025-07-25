@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -14,9 +15,18 @@ import 'services/auth_service_interface.dart';
 import 'services/auth_service_impl.dart';
 import 'services/shared_prefs_service.dart';
 
-Future<void> main() async {
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
+  }
+}
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  HttpOverrides.global = MyHttpOverrides();
   runApp(const MyApp());
 }
 

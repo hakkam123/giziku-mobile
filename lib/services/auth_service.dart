@@ -1,5 +1,7 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import '../models/auth_model.dart';
 import '../models/user_model.dart';
 import '../repositories/auth_repository.dart';
 import 'shared_prefs_service.dart';
@@ -30,23 +32,51 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final token = await _authRepository.loginAndGetToken(email, password);
-      if (token != null) {
-        await _prefsService.saveToken(token);
-        // Fetch profile dengan token
-        final profile = await _authRepository.fetchProfile(token);
-        if (profile != null) {
-          _currentUser = profile;
-          _errorMessage = null;
-          notifyListeners();
-          return true;
-        } else {
-          _errorMessage = 'Failed to fetch user profile.';
-        }
+      final loginRequest = LoginRequest(email: email, password: password);
+      final response = await _authRepository.signInWithEmailPassword(
+        loginRequest,
+      );
+
+      if (response.success) {
+        await _loadUserFromPrefs();
+        return true;
       } else {
         _errorMessage = 'Login failed. Email or password incorrect.';
       }
       return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Register dengan email dan password
+  Future<bool> signUpWithEmailPassword(
+    String name,
+    String email,
+    String password,
+  ) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final registerRequest = RegisterRequest(
+        name: name,
+        email: email,
+        password: password,
+      );
+      final response = await _authRepository.signUpWithEmailPassword(
+        registerRequest,
+      );
+
+      if (response.success) {
+        await _loadUserFromPrefs();
+        return true;
+      } else {
+        _errorMessage = response.message ?? 'Failed to sign up';
+        return false;
+      }
     } catch (e) {
       _errorMessage = 'An error occurred during login.';
       print('Login error: $e');
@@ -62,12 +92,14 @@ class AuthService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final token = await _prefsService.getToken();
-      if (token != null) {
-        final profile = await _authRepository.fetchProfile(token);
-        if (profile != null) {
-          _currentUser = profile;
-        }
+      final response = await _googleAuthService.signInWithGoogle();
+
+      if (response.success) {
+        await _loadUserFromPrefs();
+        return true;
+      } else {
+        _errorMessage = response.message ?? 'Failed to sign in with Google';
+        return false;
       }
     } catch (e) {
       print('Error load user: $e');
@@ -81,8 +113,17 @@ class AuthService extends ChangeNotifier {
   Future<void> signOut() async {
     _isLoading = true;
     notifyListeners();
+
     try {
-      await _prefsService.removeToken();
+      // Sign out from repository
+      await _authRepository.signOut();
+
+      // Sign out from Google if using Google Sign-In
+      if (_currentUser?.authProvider == AuthProvider.google) {
+        await _googleAuthService.signOut();
+      }
+
+      // Clear user data
       _currentUser = null;
     } catch (e) {
       print('Sign out error: $e');

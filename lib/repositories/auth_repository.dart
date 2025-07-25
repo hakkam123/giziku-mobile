@@ -5,36 +5,171 @@ import '../models/user_model.dart';
 
 class AuthRepository {
   final String baseUrl;
-  final SharedPrefsService prefsService;
+  final http.Client client;
+  final SharedPrefsService _prefsService;
 
   AuthRepository({
     required this.baseUrl,
-    required this.prefsService,
-  });
-  // Login: POST /api/auth/ > dapat token
-  Future<String?> loginAndGetToken(String email, String password) async {
+    http.Client? client,
+    SharedPrefsService? prefsService,
+  }) : client = client ?? http.Client(),
+       _prefsService = prefsService ?? SharedPrefsService();
+
+  /// Login
+  Future<AuthResponse> signInWithEmailPassword(LoginRequest request) async {
     try {
-      final response = await http.post(
+      final response = await client.post(
         Uri.parse('$baseUrl/api/auth/login/'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(request.toJson()),
       );
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        return data['token'];
+
+      final data = jsonDecode(response.body);
+
+      print('=== LOGIN RESPONSE ===');
+      print('Status: ${response.statusCode}');
+      print('Body: $data');
+
+      if (response.statusCode == 200) {
+        final accessToken = data['access'];
+        final refreshToken = data['refresh'];
+        final userData = data['data'];
+
+        if (accessToken != null && userData != null) {
+          // Save access token
+          await _prefsService.setAuthToken(accessToken);
+
+          // Save refresh token if available
+          if (refreshToken != null) {
+            await _prefsService.setRefreshToken(refreshToken);
+          }
+
+          try {
+            // Pass complete response data to properly extract tokens
+            final completeData = Map<String, dynamic>.from(data);
+            completeData['data'] = userData;
+
+            final user = UserModel.fromJson(completeData);
+            await _prefsService.setCurrentUser(jsonEncode(user.toJson()));
+
+            return AuthResponse(
+              success: true,
+              message: data['message'] ?? 'Login success',
+              token: accessToken,
+              userData: userData,
+            );
+          } catch (e) {
+            print('Error parsing user data: $e');
+            return AuthResponse.error(
+              'Error parsing user data: ${e.toString()}',
+            );
+          }
+        } else {
+          return AuthResponse.error('Invalid token or user data');
+        }
+      } else {
+        return AuthResponse.error(data['message'] ?? 'Login failed');
       }
-      return null;
     } catch (e) {
-      print('Login error: $e');
-      return null;
+      return AuthResponse.error('Network error: ${e.toString()}');
     }
   }
 
-  // Fetch profile user (contoh endpoint /api/profile/)
-  Future<UserModel?> fetchProfile(String token) async {
+  /// Registrasi
+  Future<AuthResponse> signUpWithEmailPassword(RegisterRequest request) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/profile/'),
+      final response = await client.post(
+        Uri.parse('$baseUrl/api/auth/register/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(request.toJson()),
+      );
+
+      final data = jsonDecode(response.body);
+
+      print('=== REGISTER RESPONSE ===');
+      print('Status: ${response.statusCode}');
+      print('Body: $data');
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final accessToken = data['access'];
+        final refreshToken = data['refresh'];
+        final userData = data['data'];
+
+        if (accessToken != null && userData != null) {
+          // Save access token
+          await _prefsService.setAuthToken(accessToken);
+
+          // Save refresh token if available
+          if (refreshToken != null) {
+            await _prefsService.setRefreshToken(refreshToken);
+          }
+
+          try {
+            // Pass complete response data to properly extract tokens
+            final completeData = Map<String, dynamic>.from(data);
+            completeData['data'] = userData;
+
+            final user = UserModel.fromJson(completeData);
+            await _prefsService.setCurrentUser(jsonEncode(user.toJson()));
+
+            return AuthResponse(
+              success: true,
+              message: data['message'] ?? 'Register success',
+              token: accessToken,
+              userData: userData,
+            );
+          } catch (e) {
+            print('Error parsing user data: $e');
+            return AuthResponse.error(
+              'Error parsing user data: ${e.toString()}',
+            );
+          }
+        } else {
+          return AuthResponse.error('Invalid token or user data');
+        }
+      } else {
+        return AuthResponse.error(data['message'] ?? 'Register failed');
+      }
+    } catch (e) {
+      return AuthResponse.error('Network error: ${e.toString()}');
+    }
+  }
+
+  /// Logout
+  Future<bool> signOut() async {
+    try {
+      // Clear all authentication data
+      await _prefsService.clearAuthToken();
+      await _prefsService.clearRefreshToken();
+      await _prefsService.clearCurrentUser();
+      print('User signed out successfully');
+      return true;
+    } catch (e) {
+      print('Error signing out: ${e.toString()}');
+      return false;
+    }
+  }
+
+  /// Cek status login
+  Future<bool> isLoggedIn() async {
+    final token = await _prefsService.getAuthToken();
+    return token != null;
+  }
+
+  /// Ambil profil user
+  Future<UserModel?> getUserProfile() async {
+    try {
+      final token = await _prefsService.getAuthToken();
+      if (token == null) return null;
+
+      final response = await client.get(
+        Uri.parse('$baseUrl/users/me'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -42,35 +177,14 @@ class AuthRepository {
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return UserModel.fromJson(data);
-      }
-      return null;
-    } catch (e) {
-      print('Fetch profile error: $e');
-      return null;
-    }
-  }
-
-    Future<bool> register({
-    required String name,
-    required String email,
-    required String password,
-  }) async {
-    try {
-      final body = {
-        'name': name,
-        'email': email,
-        'password': password,
-      };
-
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/auth/register'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return true;
+        try {
+          final user = UserModel.fromJson(data);
+          await _prefsService.setCurrentUser(jsonEncode(user.toJson()));
+          return user;
+        } catch (e) {
+          print('Error parsing user profile data: $e');
+          return null;
+        }
       } else {
         print('Register failed: ${response.body}');
         return false;
