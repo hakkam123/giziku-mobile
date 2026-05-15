@@ -11,9 +11,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedDayIndex = 3; // Default: Wednesday
-  final List<String> _daysShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  final List<int> _dates = [1, 2, 3, 4, 5, 6, 7];
+  DateTime selectedDate = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
@@ -74,11 +72,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   const Text(
                     'Hello, Jenny!',
-                    style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     formattedDate,
-                    style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
                   ),
                 ],
               ),
@@ -92,7 +98,11 @@ class _HomeScreenState extends State<HomeScreen> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Center(
-              child: Icon(Icons.notifications_outlined, color: Color(0xFF2ECC71), size: 22),
+              child: Icon(
+                Icons.notifications_outlined,
+                color: Color(0xFF2ECC71),
+                size: 22,
+              ),
             ),
           ),
         ],
@@ -125,7 +135,9 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SimulationStep1()),
+                MaterialPageRoute(
+                  builder: (context) => const SimulationStep1(),
+                ),
               );
             },
             child: Container(
@@ -180,7 +192,11 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: EdgeInsets.symmetric(horizontal: 20.0),
           child: Text(
             'Nutrition Intake',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Poppins',
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -198,7 +214,13 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 _buildNutritionItem('88', '/120', 'Carbs', 0.73, Colors.white),
                 _buildNutritionItem('24', '/70', 'Protein', 0.34, Colors.white),
-                _buildNutritionItem('32', '/52', 'Vitamin', 0.62, const Color(0xFF2ECC71)),
+                _buildNutritionItem(
+                  '32',
+                  '/52',
+                  'Vitamin',
+                  0.62,
+                  const Color(0xFF2ECC71),
+                ),
               ],
             ),
           ),
@@ -207,7 +229,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildNutritionItem(String value, String total, String label, double percent, Color progressColor) {
+  Widget _buildNutritionItem(
+    String value,
+    String total,
+    String label,
+    double percent,
+    Color progressColor,
+  ) {
     return Column(
       children: [
         Row(
@@ -216,16 +244,32 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text(
               value,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'Poppins'),
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontFamily: 'Poppins',
+              ),
             ),
             Text(
               total,
-              style: TextStyle(fontSize: 12, color: Colors.grey[400], fontFamily: 'Poppins'),
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[400],
+                fontFamily: 'Poppins',
+              ),
             ),
           ],
         ),
         const SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[400], fontFamily: 'Poppins')),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[400],
+            fontFamily: 'Poppins',
+          ),
+        ),
         const SizedBox(height: 6),
         LinearPercentIndicator(
           width: 75.0,
@@ -241,49 +285,161 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDateSelector() {
+    final startDate = selectedDate.subtract(
+      Duration(days: selectedDate.weekday - 1),
+    );
+
+    final weekDates = List.generate(
+      7,
+      (index) => startDate.add(Duration(days: index)),
+    );
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: SizedBox(
-        height: 100,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: 7,
-          itemBuilder: (context, index) {
-            bool isSelected = index == _selectedDayIndex;
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  _selectedDayIndex = index;
-                });
-              },
-              child: Container(
-                width: 42,
-                margin: const EdgeInsets.only(right: 10),
-                decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF2ECC71) : Colors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(color: const Color(0xFF2ECC71), width: 1),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(_daysShort[index],
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            /// HEADER
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Calendar',
                         style: TextStyle(
-                            fontSize: 12,
-                            color: isSelected ? Colors.white : Colors.black,
-                            fontFamily: 'Poppins')),
-                    const SizedBox(height: 4),
-                    Text(_dates[index].toString(),
+                          fontFamily: 'Poppins',
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      Text(
+                        DateFormat('MMMM yyyy').format(selectedDate),
                         style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : Colors.black,
-                            fontFamily: 'Poppins')),
-                  ],
-                ),
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  GestureDetector(
+                    onTap: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030),
+                      );
+
+                      if (pickedDate != null) {
+                        setState(() {
+                          selectedDate = pickedDate;
+                        });
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8FFF1),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(
+                        Icons.calendar_month_rounded,
+                        color: Color(0xFF2ECC71),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            );
-          },
+            ),
+
+            const SizedBox(height: 18),
+
+            /// WEEK VIEW
+            SizedBox(
+              height: 82,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                itemCount: weekDates.length,
+                itemBuilder: (context, index) {
+                  final date = weekDates[index];
+
+                  final isSelected =
+                      date.day == selectedDate.day &&
+                      date.month == selectedDate.month &&
+                      date.year == selectedDate.year;
+
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedDate = date;
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      width: 56,
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFF2ECC71)
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: isSelected
+                              ? const Color(0xFF2ECC71)
+                              : Colors.grey.shade300,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            DateFormat('E').format(date),
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 13,
+                              color: isSelected ? Colors.white : Colors.grey,
+                            ),
+                          ),
+
+                          const SizedBox(height: 6),
+
+                          Text(
+                            date.day.toString(),
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: isSelected ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -357,7 +513,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: const [
-                        Icon(Icons.local_fire_department, color: Colors.red, size: 18),
+                        Icon(
+                          Icons.local_fire_department,
+                          color: Colors.red,
+                          size: 18,
+                        ),
                         SizedBox(width: 4),
                         Text(
                           '280 Calories',
@@ -372,7 +532,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 4),
                     Row(
                       children: const [
-                        Icon(Icons.attach_money, color: Color(0xFF2ECC71), size: 18),
+                        Icon(
+                          Icons.attach_money,
+                          color: Color(0xFF2ECC71),
+                          size: 18,
+                        ),
                         SizedBox(width: 4),
                         Text(
                           'Estimated Cost: Rp 149.000',
@@ -443,12 +607,24 @@ class _SimulationItem extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, color: Colors.white70)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 14,
+            color: Colors.white70,
+          ),
+        ),
         const SizedBox(height: 2),
-        Text(value,
-            style: const TextStyle(
-                fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+        Text(
+          value,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
       ],
     );
   }

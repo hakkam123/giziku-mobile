@@ -8,8 +8,9 @@ import '../models/food_scan_model.dart';
 
 class ScannerService {
   final model = GenerativeModel(
-    model: 'gemini-2.5-flash',
+    model: 'models/gemini-2.5-flash',
     apiKey: ApiKeys.geminiApiKey,
+    generationConfig: GenerationConfig(temperature: 0.2),
   );
 
   Future<FoodScanModel> scanFood(File image) async {
