@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
-class ProfileDetailScreen extends StatelessWidget {
-  const ProfileDetailScreen({super.key});
+class FamilyMemberDetailScreen extends StatelessWidget {
+  final String name;
+  final String role;
+
+  const FamilyMemberDetailScreen({
+    super.key,
+    required this.name,
+    required this.role,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-
-    final String name = user?.displayName ?? "Guest User";
-    final String email = user?.email ?? "No Email";
-    final String photo = user?.photoURL ?? "";
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
 
@@ -27,13 +27,12 @@ class ProfileDetailScreen extends StatelessWidget {
             elevation: 0,
 
             leading: Padding(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8.0),
               child: Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
                 ),
-
                 child: IconButton(
                   icon: const Icon(Icons.arrow_back, color: Color(0xFF2ECC71)),
                   onPressed: () => Navigator.pop(context),
@@ -54,36 +53,27 @@ class ProfileDetailScreen extends StatelessWidget {
                 child: SafeArea(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const SizedBox(height: 40),
 
                       Container(
                         padding: const EdgeInsets.all(4),
-
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 3),
                         ),
-
-                        child: CircleAvatar(
-                          radius: 50,
+                        child: const CircleAvatar(
+                          radius: 48,
                           backgroundColor: Colors.white,
-                          backgroundImage: photo.isNotEmpty
-                              ? NetworkImage(photo)
-                              : null,
-
-                          child: photo.isEmpty
-                              ? const Icon(
-                                  Icons.person,
-                                  size: 55,
-                                  color: Color(0xFF2ECC71),
-                                )
-                              : null,
+                          child: Icon(
+                            Icons.person,
+                            size: 52,
+                            color: Color(0xFF2ECC71),
+                          ),
                         ),
                       ),
 
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 16),
 
                       Text(
                         name,
@@ -98,15 +88,15 @@ class ProfileDetailScreen extends StatelessWidget {
                       const SizedBox(height: 6),
 
                       Text(
-                        email,
+                        role,
                         style: const TextStyle(
                           color: Colors.white70,
                           fontFamily: 'Poppins',
-                          fontSize: 14,
+                          fontSize: 15,
                         ),
                       ),
 
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 20),
 
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -140,54 +130,45 @@ class ProfileDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
 
                 children: [
-                  // ================= BASIC =================
                   const _SectionTitle(title: 'Basic Information'),
 
                   const SizedBox(height: 18),
 
                   _infoCard(
-                    children: [
+                    children: const [
                       _InfoTile(
                         icon: Icons.person_outline,
                         title: 'Full Name',
-                        value: name,
+                        value: 'Jenny Perdana',
                       ),
 
-                      const _InfoDivider(),
+                      _InfoDivider(),
 
                       _InfoTile(
-                        icon: Icons.email_outlined,
-                        title: 'Email',
-                        value: email,
-                      ),
-
-                      const _InfoDivider(),
-
-                      const _InfoTile(
                         icon: Icons.cake_outlined,
                         title: 'Age',
                         value: '29 Years Old',
                       ),
 
-                      const _InfoDivider(),
+                      _InfoDivider(),
 
-                      const _InfoTile(
+                      _InfoTile(
                         icon: Icons.female_outlined,
                         title: 'Gender',
                         value: 'Female',
                       ),
 
-                      const _InfoDivider(),
+                      _InfoDivider(),
 
-                      const _InfoTile(
+                      _InfoTile(
                         icon: Icons.height,
                         title: 'Height',
                         value: '165 cm',
                       ),
 
-                      const _InfoDivider(),
+                      _InfoDivider(),
 
-                      const _InfoTile(
+                      _InfoTile(
                         icon: Icons.monitor_weight_outlined,
                         title: 'Weight',
                         value: '60 kg',
@@ -197,7 +178,6 @@ class ProfileDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 28),
 
-                  // ================= NUTRITION =================
                   const _SectionTitle(title: 'Nutrition & Body Analysis'),
 
                   const SizedBox(height: 18),
@@ -238,7 +218,6 @@ class ProfileDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 28),
 
-                  // ================= HEALTH =================
                   const _SectionTitle(title: 'Health Conditions'),
 
                   const SizedBox(height: 18),
@@ -271,7 +250,6 @@ class ProfileDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 28),
 
-                  // ================= HORMONAL =================
                   const _SectionTitle(title: 'Physiological & Hormonal Status'),
 
                   const SizedBox(height: 18),
@@ -304,7 +282,6 @@ class ProfileDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 28),
 
-                  // ================= LIFESTYLE =================
                   const _SectionTitle(title: 'Lifestyle & Eating Behaviour'),
 
                   const SizedBox(height: 18),
@@ -337,7 +314,6 @@ class ProfileDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 28),
 
-                  // ================= GENETIC =================
                   const _SectionTitle(title: 'Genetics & Metabolism'),
 
                   const SizedBox(height: 18),
@@ -362,10 +338,8 @@ class ProfileDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 34),
 
-                  // ================= BUTTON =================
                   SizedBox(
                     width: double.infinity,
-
                     child: ElevatedButton(
                       onPressed: () {},
 
@@ -380,7 +354,7 @@ class ProfileDetailScreen extends StatelessWidget {
                       ),
 
                       child: const Text(
-                        'Edit My Profile',
+                        'Edit Family Member',
                         style: TextStyle(
                           color: Colors.white,
                           fontFamily: 'Poppins',
@@ -423,6 +397,8 @@ class ProfileDetailScreen extends StatelessWidget {
   }
 }
 
+// ================= SECTION TITLE =================
+
 class _SectionTitle extends StatelessWidget {
   final String title;
 
@@ -440,6 +416,8 @@ class _SectionTitle extends StatelessWidget {
     );
   }
 }
+
+// ================= MINI STAT =================
 
 class _MiniStat extends StatelessWidget {
   final String title;
@@ -465,6 +443,7 @@ class _MiniStat extends StatelessWidget {
           Text(
             value,
             overflow: TextOverflow.ellipsis,
+
             style: const TextStyle(
               color: Colors.white,
               fontFamily: 'Poppins',
@@ -488,6 +467,8 @@ class _MiniStat extends StatelessWidget {
     );
   }
 }
+
+// ================= INFO TILE =================
 
 class _InfoTile extends StatelessWidget {
   final IconData icon;
@@ -552,6 +533,8 @@ class _InfoTile extends StatelessWidget {
   }
 }
 
+// ================= DIVIDER =================
+
 class _InfoDivider extends StatelessWidget {
   const _InfoDivider();
 
@@ -560,6 +543,37 @@ class _InfoDivider extends StatelessWidget {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: 18),
       child: Divider(height: 1, color: Color(0xFFF0F0F0)),
+    );
+  }
+}
+
+// ================= OPTIONAL HEALTH TAG =================
+
+class _HealthTag extends StatelessWidget {
+  final String text;
+  final Color color;
+
+  const _HealthTag({required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(30),
+      ),
+
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontFamily: 'Poppins',
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
