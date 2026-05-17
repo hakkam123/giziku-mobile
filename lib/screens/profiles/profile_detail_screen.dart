@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileDetailScreen extends StatelessWidget {
   const ProfileDetailScreen({super.key});
@@ -7,396 +9,451 @@ class ProfileDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final uid = user!.uid;
 
-    final String name = user?.displayName ?? "Guest User";
-    final String email = user?.email ?? "No Email";
-    final String photo = user?.photoURL ?? "";
+    final String name = user.displayName ?? "Guest User";
+    final String email = user.email ?? "No Email";
+    final String photo = user.photoURL ?? "";
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
 
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .snapshots(),
 
-        slivers: [
-          // ================= HEADER =================
-          SliverAppBar(
-            expandedHeight: 360,
-            pinned: true,
-            backgroundColor: const Color(0xFF2ECC71),
-            elevation: 0,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            leading: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
+          final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
 
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Color(0xFF2ECC71)),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-            ),
+          String v(dynamic value, [String suffix = '']) {
+            if (value == null || value.toString().isEmpty) {
+              return '-';
+            }
 
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF2AD882), Color(0xFF2ECC71)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+            return '$value$suffix';
+          }
+
+          return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+
+            slivers: [
+              // ================= HEADER =================
+              SliverAppBar(
+                expandedHeight: 360,
+                pinned: true,
+                backgroundColor: const Color(0xFF2ECC71),
+                elevation: 0,
+
+                leading: Padding(
+                  padding: const EdgeInsets.all(8),
+
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Color(0xFF2ECC71),
+                      ),
+
+                      onPressed: () => Navigator.pop(context),
+                    ),
                   ),
                 ),
 
-                child: SafeArea(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 40),
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF2AD882), Color(0xFF2ECC71)],
 
-                      Container(
-                        padding: const EdgeInsets.all(4),
-
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3),
-                        ),
-
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.white,
-                          backgroundImage: photo.isNotEmpty
-                              ? NetworkImage(photo)
-                              : null,
-
-                          child: photo.isEmpty
-                              ? const Icon(
-                                  Icons.person,
-                                  size: 55,
-                                  color: Color(0xFF2ECC71),
-                                )
-                              : null,
-                        ),
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-
-                      const SizedBox(height: 18),
-
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: 'Poppins',
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-
-                      const SizedBox(height: 6),
-
-                      Text(
-                        email,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontFamily: 'Poppins',
-                          fontSize: 14,
-                        ),
-                      ),
-
-                      const SizedBox(height: 22),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 12,
-                          runSpacing: 12,
-
-                          children: const [
-                            _MiniStat(title: 'BMI', value: '22.1'),
-
-                            _MiniStat(title: 'Calories', value: '2100'),
-
-                            _MiniStat(title: 'Status', value: 'Healthy'),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // ================= CONTENT =================
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-
-                children: [
-                  // ================= BASIC =================
-                  const _SectionTitle(title: 'Basic Information'),
-
-                  const SizedBox(height: 18),
-
-                  _infoCard(
-                    children: [
-                      _InfoTile(
-                        icon: Icons.person_outline,
-                        title: 'Full Name',
-                        value: name,
-                      ),
-
-                      const _InfoDivider(),
-
-                      _InfoTile(
-                        icon: Icons.email_outlined,
-                        title: 'Email',
-                        value: email,
-                      ),
-
-                      const _InfoDivider(),
-
-                      const _InfoTile(
-                        icon: Icons.cake_outlined,
-                        title: 'Age',
-                        value: '29 Years Old',
-                      ),
-
-                      const _InfoDivider(),
-
-                      const _InfoTile(
-                        icon: Icons.female_outlined,
-                        title: 'Gender',
-                        value: 'Female',
-                      ),
-
-                      const _InfoDivider(),
-
-                      const _InfoTile(
-                        icon: Icons.height,
-                        title: 'Height',
-                        value: '165 cm',
-                      ),
-
-                      const _InfoDivider(),
-
-                      const _InfoTile(
-                        icon: Icons.monitor_weight_outlined,
-                        title: 'Weight',
-                        value: '60 kg',
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // ================= NUTRITION =================
-                  const _SectionTitle(title: 'Nutrition & Body Analysis'),
-
-                  const SizedBox(height: 18),
-
-                  _infoCard(
-                    children: const [
-                      _InfoTile(
-                        icon: Icons.calculate_outlined,
-                        title: 'Body Mass Index (BMI)',
-                        value: '22.1 (Normal)',
-                      ),
-
-                      _InfoDivider(),
-
-                      _InfoTile(
-                        icon: Icons.local_fire_department_outlined,
-                        title: 'Daily Calorie Needs',
-                        value: '2100 kcal/day',
-                      ),
-
-                      _InfoDivider(),
-
-                      _InfoTile(
-                        icon: Icons.restaurant_menu_outlined,
-                        title: 'Nutrition Target',
-                        value: 'Balanced Nutrition',
-                      ),
-
-                      _InfoDivider(),
-
-                      _InfoTile(
-                        icon: Icons.sports_gymnastics_outlined,
-                        title: 'Physical Activity',
-                        value: 'Moderately Active',
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // ================= HEALTH =================
-                  const _SectionTitle(title: 'Health Conditions'),
-
-                  const SizedBox(height: 18),
-
-                  _infoCard(
-                    children: const [
-                      _InfoTile(
-                        icon: Icons.coronavirus_outlined,
-                        title: 'Chronic Disease',
-                        value: 'None',
-                      ),
-
-                      _InfoDivider(),
-
-                      _InfoTile(
-                        icon: Icons.warning_amber_outlined,
-                        title: 'Allergies',
-                        value: 'Seafood Allergy',
-                      ),
-
-                      _InfoDivider(),
-
-                      _InfoTile(
-                        icon: Icons.medication_outlined,
-                        title: 'Current Medication',
-                        value: 'Vitamin Supplement',
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // ================= HORMONAL =================
-                  const _SectionTitle(title: 'Physiological & Hormonal Status'),
-
-                  const SizedBox(height: 18),
-
-                  _infoCard(
-                    children: const [
-                      _InfoTile(
-                        icon: Icons.favorite_outline,
-                        title: 'Hormonal Status',
-                        value: 'Normal',
-                      ),
-
-                      _InfoDivider(),
-
-                      _InfoTile(
-                        icon: Icons.pregnant_woman_outlined,
-                        title: 'Pregnancy Status',
-                        value: 'Not Pregnant',
-                      ),
-
-                      _InfoDivider(),
-
-                      _InfoTile(
-                        icon: Icons.water_drop_outlined,
-                        title: 'Menstrual Cycle',
-                        value: 'Regular',
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // ================= LIFESTYLE =================
-                  const _SectionTitle(title: 'Lifestyle & Eating Behaviour'),
-
-                  const SizedBox(height: 18),
-
-                  _infoCard(
-                    children: const [
-                      _InfoTile(
-                        icon: Icons.fastfood_outlined,
-                        title: 'Eating Pattern',
-                        value: '3 Meals + 2 Snacks',
-                      ),
-
-                      _InfoDivider(),
-
-                      _InfoTile(
-                        icon: Icons.psychology_outlined,
-                        title: 'Nutrition Knowledge',
-                        value: 'Intermediate',
-                      ),
-
-                      _InfoDivider(),
-
-                      _InfoTile(
-                        icon: Icons.self_improvement_outlined,
-                        title: 'Body Image Goal',
-                        value: 'Maintain Healthy Weight',
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // ================= GENETIC =================
-                  const _SectionTitle(title: 'Genetics & Metabolism'),
-
-                  const SizedBox(height: 18),
-
-                  _infoCard(
-                    children: const [
-                      _InfoTile(
-                        icon: Icons.science_outlined,
-                        title: 'Metabolism Type',
-                        value: 'Normal Metabolism',
-                      ),
-
-                      _InfoDivider(),
-
-                      _InfoTile(
-                        icon: Icons.biotech_outlined,
-                        title: 'Genetic Risk',
-                        value: 'Low Diabetes Risk',
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 34),
-
-                  // ================= BUTTON =================
-                  SizedBox(
-                    width: double.infinity,
-
-                    child: ElevatedButton(
-                      onPressed: () {},
-
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2ECC71),
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                      ),
-
-                      child: const Text(
-                        'Edit My Profile',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontFamily: 'Poppins',
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    ),
+
+                    child: SafeArea(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+
+                        children: [
+                          const SizedBox(height: 40),
+
+                          Container(
+                            padding: const EdgeInsets.all(4),
+
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                            ),
+
+                            child: CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.white,
+
+                              backgroundImage: photo.isNotEmpty
+                                  ? NetworkImage(photo)
+                                  : null,
+
+                              child: photo.isEmpty
+                                  ? const Icon(
+                                      Icons.person,
+                                      size: 55,
+                                      color: Color(0xFF2ECC71),
+                                    )
+                                  : null,
+                            ),
+                          ),
+
+                          const SizedBox(height: 18),
+
+                          Text(
+                            name,
+
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Poppins',
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          const SizedBox(height: 6),
+
+                          Text(
+                            email,
+
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                            ),
+                          ),
+
+                          const SizedBox(height: 22),
+
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: _MiniStat(
+                                    title: 'BMI',
+                                    value: v(data['bmi']),
+                                  ),
+                                ),
+
+                                const SizedBox(width: 12),
+
+                                Expanded(
+                                  child: _MiniStat(
+                                    title: 'Kalori',
+                                    value: "${v(data['target_calories'])} kcal",
+                                  ),
+                                ),
+
+                                const SizedBox(width: 12),
+
+                                Expanded(
+                                  child: _MiniStat(
+                                    title: 'Target',
+
+                                    value:
+                                        data['body_goal'] ==
+                                            'Menambah Massa Otot'
+                                        ? 'Bulking'
+                                        : data['body_goal'] ==
+                                              'Menurunkan Berat Badan'
+                                        ? 'Cutting'
+                                        : data['body_goal'] ==
+                                              'Menjaga Berat Badan'
+                                        ? 'Maintain'
+                                        : '-',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 40),
-                ],
+                ),
               ),
-            ),
-          ),
-        ],
+
+              // ================= CONTENT =================
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+
+                    children: [
+                      // ================= INFORMASI DASAR =================
+                      const _SectionTitle(title: 'Informasi Dasar'),
+
+                      const SizedBox(height: 18),
+
+                      _infoCard(
+                        children: [
+                          _InfoTile(
+                            icon: Icons.person_outline,
+                            title: 'Nama Lengkap',
+                            value: name,
+                          ),
+
+                          const _InfoDivider(),
+
+                          _InfoTile(
+                            icon: Icons.email_outlined,
+                            title: 'Email',
+                            value: email,
+                          ),
+
+                          const _InfoDivider(),
+
+                          _InfoTile(
+                            icon: Icons.wc,
+                            title: 'Jenis Kelamin',
+                            value: v(data['gender']),
+                          ),
+
+                          const _InfoDivider(),
+
+                          _InfoTile(
+                            icon: Icons.cake_outlined,
+                            title: 'Tanggal Lahir',
+                            value: v(data['date_of_birth']),
+                          ),
+
+                          const _InfoDivider(),
+
+                          _InfoTile(
+                            icon: Icons.calendar_today,
+                            title: 'Umur',
+                            value: v(data['age'], ' Tahun'),
+                          ),
+                        ],
+                      ),
+
+                      // ================= ANALISIS TUBUH =================
+                      const SizedBox(height: 28),
+
+                      const _SectionTitle(title: 'Analisis Tubuh'),
+
+                      const SizedBox(height: 18),
+
+                      _infoCard(
+                        children: [
+                          _InfoTile(
+                            icon: Icons.height,
+                            title: 'Tinggi Badan',
+                            value: v(data['height'], ' cm'),
+                          ),
+
+                          const _InfoDivider(),
+
+                          _InfoTile(
+                            icon: Icons.monitor_weight_outlined,
+                            title: 'Berat Badan',
+                            value: v(data['weight'], ' kg'),
+                          ),
+
+                          const _InfoDivider(),
+
+                          _InfoTile(
+                            icon: Icons.calculate_outlined,
+                            title: 'BMI',
+                            value: v(data['bmi']),
+                          ),
+
+                          const _InfoDivider(),
+
+                          _InfoTile(
+                            icon: Icons.favorite,
+                            title: 'Status BMI',
+                            value: v(data['bmi_status']),
+                          ),
+
+                          const _InfoDivider(),
+
+                          _InfoTile(
+                            icon: Icons.fitness_center,
+                            title: 'Berat Ideal',
+                            value: v(data['ideal_weight'], ' kg'),
+                          ),
+
+                          const _InfoDivider(),
+
+                          _InfoTile(
+                            icon: Icons.local_fire_department,
+                            title: 'Kebutuhan Kalori',
+                            value: v(data['target_calories'], ' kcal'),
+                          ),
+
+                          const _InfoDivider(),
+
+                          _InfoTile(
+                            icon: Icons.directions_run,
+                            title: 'Activity Level',
+                            value: v(data['activity_level']),
+                          ),
+
+                          const _InfoDivider(),
+
+                          _InfoTile(
+                            icon: Icons.sports_gymnastics,
+                            title: 'Exercise Level',
+                            value: v(data['exercise_level']),
+                          ),
+
+                          const _InfoDivider(),
+
+                          _InfoTile(
+                            icon: Icons.track_changes,
+                            title: 'Target Tubuh',
+                            value: v(data['body_goal']),
+                          ),
+                        ],
+                      ),
+
+                      // ================= PREFERENSI NUTRISI =================
+                      const SizedBox(height: 28),
+
+                      const _SectionTitle(title: 'Preferensi Nutrisi'),
+
+                      const SizedBox(height: 18),
+
+                      _infoCard(
+                        children: [
+                          _InfoTile(
+                            icon: Icons.restaurant,
+                            title: 'Tipe Makanan',
+                            value: v(data['food_type']),
+                          ),
+
+                          const _InfoDivider(),
+
+                          _InfoTile(
+                            icon: Icons.favorite_outline,
+                            title: 'Makanan Favorit',
+                            value: v(data['favorite_foods']),
+                          ),
+
+                          const _InfoDivider(),
+
+                          _InfoTile(
+                            icon: Icons.thumb_down_alt_outlined,
+                            title: 'Makanan Tidak Disukai',
+                            value: v(data['disliked_foods']),
+                          ),
+
+                          const _InfoDivider(),
+
+                          _InfoTile(
+                            icon: Icons.warning_amber_outlined,
+                            title: 'Alergi',
+                            value: v(data['allergies']),
+                          ),
+                        ],
+                      ),
+
+                      // ================= KONDISI KESEHATAN =================
+                      const SizedBox(height: 28),
+
+                      const _SectionTitle(title: 'Kondisi Kesehatan'),
+
+                      const SizedBox(height: 18),
+
+                      _infoCard(
+                        children: [
+                          _InfoTile(
+                            icon: Icons.medical_services_outlined,
+                            title: 'Riwayat Penyakit',
+                            value: v(data['health_condition']),
+                          ),
+                        ],
+                      ),
+
+                      // ================= KEBIASAAN MAKAN =================
+                      const SizedBox(height: 28),
+
+                      const _SectionTitle(title: 'Kebiasaan Makan'),
+
+                      const SizedBox(height: 18),
+
+                      _infoCard(
+                        children: [
+                          _InfoTile(
+                            icon: Icons.fastfood_outlined,
+                            title: 'Pola Makan',
+                            value: v(data['eating_pattern']),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 34),
+
+                      // ================= BUTTON =================
+                      SizedBox(
+                        width: double.infinity,
+
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+
+                              MaterialPageRoute(
+                                builder: (_) => const EditProfileScreen(),
+                              ),
+                            );
+                          },
+
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2ECC71),
+
+                            elevation: 0,
+
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                          ),
+
+                          child: const Text(
+                            'Edit Profil',
+
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -432,6 +489,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
+
       style: const TextStyle(
         fontFamily: 'Poppins',
         fontSize: 18,
@@ -450,33 +508,44 @@ class _MiniStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minWidth: 90),
+      height: 82,
 
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
 
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.18),
+
         borderRadius: BorderRadius.circular(18),
       ),
 
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+
         children: [
           Text(
             value,
+
+            maxLines: 1,
+
             overflow: TextOverflow.ellipsis,
+
+            textAlign: TextAlign.center,
+
             style: const TextStyle(
               color: Colors.white,
               fontFamily: 'Poppins',
               fontWeight: FontWeight.bold,
-              fontSize: 15,
+              fontSize: 14,
             ),
           ),
 
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
 
           Text(
             title,
+
+            textAlign: TextAlign.center,
+
             style: const TextStyle(
               color: Colors.white70,
               fontFamily: 'Poppins',
@@ -527,6 +596,7 @@ class _InfoTile extends StatelessWidget {
             children: [
               Text(
                 title,
+
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 13,
@@ -538,6 +608,7 @@ class _InfoTile extends StatelessWidget {
 
               Text(
                 value,
+
                 style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 15,
@@ -559,6 +630,7 @@ class _InfoDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: 18),
+
       child: Divider(height: 1, color: Color(0xFFF0F0F0)),
     );
   }

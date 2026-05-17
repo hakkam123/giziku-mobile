@@ -1,5 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -9,434 +10,714 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  // Controllers untuk form fields
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _birthDateController = TextEditingController();
-  final TextEditingController _heightController = TextEditingController();
-  final TextEditingController _weightController = TextEditingController();
-  
-  // Dummy data
-  final Map<String, dynamic> _profileData = {
-    'name': 'Jenny Perdana',
-    'phoneNumber': '',
-    'birthDate': '',
-    'height': '',
-    'weight': '',
-    'photoUrl': 'assets/profile/profile_picture.png',
-  };
-  
+  final uid = FirebaseAuth.instance.currentUser!.uid;
+
+  final _formKey = GlobalKey<FormState>();
+
+  // ================= CONTROLLERS =================
+  final nameController = TextEditingController();
+
+  final emailController = TextEditingController();
+
+  final ageController = TextEditingController();
+
+  final genderController = TextEditingController();
+
+  final heightController = TextEditingController();
+
+  final weightController = TextEditingController();
+
+  final bmiController = TextEditingController();
+
+  final bmiStatusController = TextEditingController();
+
+  final idealWeightController = TextEditingController();
+
+  final caloriesController = TextEditingController();
+
+  final activityController = TextEditingController();
+
+  final exerciseController = TextEditingController();
+
+  final bodyGoalController = TextEditingController();
+
+  final foodTypeController = TextEditingController();
+
+  final favoriteFoodsController = TextEditingController();
+
+  final dislikedFoodsController = TextEditingController();
+
+  final allergiesController = TextEditingController();
+
+  final healthController = TextEditingController();
+
+  final eatingController = TextEditingController();
+
+  final birthDateController = TextEditingController();
+
+  bool isLoading = true;
+
+  // ================= INIT =================
+
   @override
   void initState() {
     super.initState();
-    // Mengisi controller dengan data dummy
-    _nameController.text = _profileData['name'];
-    _phoneController.text = _profileData['phoneNumber'];
-    _birthDateController.text = _profileData['birthDate'];
-    _heightController.text = _profileData['height'];
-    _weightController.text = _profileData['weight'];
-  }
-  
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
-    _birthDateController.dispose();
-    _heightController.dispose();
-    _weightController.dispose();
-    super.dispose();
+    loadData();
   }
 
-  // Fungsi untuk memilih tanggal
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1950),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF2ECC71),
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    
-    if (picked != null) {
-      setState(() {
-        _birthDateController.text = DateFormat('dd/MM/yyyy').format(picked);
-      });
+  // ================= LOAD DATA =================
+
+  Future<void> loadData() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
+
+    final data = doc.data();
+
+    if (data != null) {
+      nameController.text = data['name'] ?? '';
+
+      emailController.text = data['email'] ?? '';
+
+      ageController.text = data['age']?.toString() ?? '';
+
+      genderController.text = data['gender'] ?? '';
+
+      heightController.text = data['height']?.toString() ?? '';
+
+      weightController.text = data['weight']?.toString() ?? '';
+
+      bmiController.text = data['bmi']?.toString() ?? '';
+
+      bmiStatusController.text = data['bmi_status'] ?? '';
+
+      idealWeightController.text = data['ideal_weight']?.toString() ?? '';
+
+      caloriesController.text = data['target_calories']?.toString() ?? '';
+
+      activityController.text = data['activity_level'] ?? '';
+
+      exerciseController.text = data['exercise_level'] ?? '';
+
+      bodyGoalController.text = data['body_goal'] ?? '';
+
+      foodTypeController.text = data['food_type'] ?? '';
+
+      favoriteFoodsController.text = data['favorite_foods'] ?? '';
+
+      dislikedFoodsController.text = data['disliked_foods'] ?? '';
+
+      allergiesController.text = data['allergies'] ?? '';
+
+      healthController.text = data['health_condition'] ?? '';
+
+      eatingController.text = data['eating_pattern'] ?? '';
+
+      birthDateController.text = data['date_of_birth'] ?? '';
     }
+
+    setState(() {
+      isLoading = false;
+    });
   }
+
+  // ================= BMI CALCULATION =================
+
+  void calculateBMI() {
+    final height = double.tryParse(heightController.text);
+
+    final weight = double.tryParse(weightController.text);
+
+    if (height == null || weight == null || height == 0) {
+      return;
+    }
+
+    final heightMeter = height / 100;
+
+    final bmi = weight / (heightMeter * heightMeter);
+
+    bmiController.text = bmi.toStringAsFixed(1);
+
+    // STATUS BMI
+
+    if (bmi < 18.5) {
+      bmiStatusController.text = 'Kurus';
+    } else if (bmi < 25) {
+      bmiStatusController.text = 'Normal';
+    } else if (bmi < 30) {
+      bmiStatusController.text = 'Gemuk';
+    } else {
+      bmiStatusController.text = 'Obesitas';
+    }
+
+    // BERAT IDEAL
+
+    double idealWeight;
+
+    if (genderController.text == 'Pria') {
+      idealWeight = (height - 100) - ((height - 100) * 0.1);
+    } else {
+      idealWeight = (height - 100) - ((height - 100) * 0.15);
+    }
+
+    idealWeightController.text = idealWeight.toStringAsFixed(1);
+
+    // KALORI
+
+    final calories = (weight * 30).toInt();
+
+    caloriesController.text = calories.toString();
+  }
+
+  void calculateAge(DateTime birthDate) {
+    final today = DateTime.now();
+
+    int age = today.year - birthDate.year;
+
+    if (today.month < birthDate.month ||
+        (today.month == birthDate.month && today.day < birthDate.day)) {
+      age--;
+    }
+
+    ageController.text = age.toString();
+  }
+  // ================= SAVE =================
+
+  Future<void> saveProfile() async {
+    await FirebaseFirestore.instance.collection('users').doc(uid).set({
+      'name': nameController.text,
+
+      'email': emailController.text,
+      'age': int.tryParse(ageController.text),
+
+      'gender': genderController.text,
+
+      'height': double.tryParse(heightController.text),
+
+      'weight': double.tryParse(weightController.text),
+
+      'bmi': bmiController.text,
+
+      'bmi_status': bmiStatusController.text,
+
+      'ideal_weight': double.tryParse(idealWeightController.text),
+
+      'target_calories': int.tryParse(caloriesController.text),
+
+      'activity_level': activityController.text,
+
+      'exercise_level': exerciseController.text,
+
+      'body_goal': bodyGoalController.text,
+
+      'food_type': foodTypeController.text,
+
+      'favorite_foods': favoriteFoodsController.text,
+
+      'disliked_foods': dislikedFoodsController.text,
+
+      'allergies': allergiesController.text,
+
+      'health_condition': healthController.text,
+
+      'eating_pattern': eatingController.text,
+
+      'date_of_birth': birthDateController.text,
+
+      'updated_at': Timestamp.now(),
+    }, SetOptions(merge: true));
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Profil berhasil diperbarui')));
+
+    Navigator.pop(context);
+  }
+
+  // ================= FIELD =================
+
+  Widget buildField({
+    required String label,
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
+    bool readOnly = false,
+    int maxLines = 1,
+    VoidCallback? onTap,
+    Widget? suffixIcon,
+    Function(String)? onChanged,
+    String? hint,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+
+      child: TextFormField(
+        controller: controller,
+
+        keyboardType: keyboardType,
+
+        readOnly: readOnly,
+
+        maxLines: maxLines,
+
+        onTap: onTap,
+
+        onChanged: onChanged,
+
+        style: const TextStyle(fontFamily: 'Poppins'),
+
+        decoration: InputDecoration(
+          labelText: label,
+
+          hintText: hint,
+
+          hintStyle: TextStyle(
+            fontFamily: 'Poppins',
+            color: Colors.grey.shade500,
+          ),
+
+          suffixIcon: suffixIcon,
+
+          filled: true,
+
+          fillColor: readOnly ? Colors.grey.shade100 : const Color(0xFFF8FAFC),
+
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 18,
+          ),
+
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+
+            borderSide: BorderSide.none,
+          ),
+
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+
+            borderSide: const BorderSide(color: Color(0xFF2ECC71), width: 2),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ================= DROPDOWN =================
+
+  Widget buildDropdown({
+    required String label,
+    required String value,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+
+      child: DropdownButtonFormField<String>(
+        value: value.isEmpty ? null : value,
+
+        items: items.map((item) {
+          return DropdownMenuItem(
+            value: item,
+
+            child: Text(item, style: const TextStyle(fontFamily: 'Poppins')),
+          );
+        }).toList(),
+
+        onChanged: onChanged,
+
+        decoration: InputDecoration(
+          labelText: label,
+
+          filled: true,
+
+          fillColor: const Color(0xFFF8FAFC),
+
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+
+            borderSide: BorderSide.none,
+          ),
+
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+
+            borderSide: const BorderSide(color: Color(0xFF2ECC71), width: 2),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ================= SECTION =================
+
+  Widget buildSection(String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+
+      children: [
+        Text(
+          title,
+
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+
+        const SizedBox(height: 18),
+
+        Container(
+          padding: const EdgeInsets.all(20),
+
+          decoration: BoxDecoration(
+            color: Colors.white,
+
+            borderRadius: BorderRadius.circular(28),
+
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+
+                blurRadius: 18,
+
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+
+          child: Column(children: children),
+        ),
+
+        const SizedBox(height: 28),
+      ],
+    );
+  }
+
+  // ================= UI =================
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          // Header dengan background hijau dan foto profil
-          _buildHeader(),
-          
-          // Form fields dalam scrollable content
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 60),
-                  
-                  // Full Name Field
-                  _buildTextField(
-                    controller: _nameController,
-                    hintText: 'Full Name',
-                  ),
-                  
-                  const SizedBox(height: 15),
-                  
-                  // Phone Number Field with country flag
-                  _buildPhoneField(),
-                  
-                  const SizedBox(height: 15),
-                  
-                  // Date of Birth Field
-                  _buildDateField(),
-                  
-                  const SizedBox(height: 15),
-                  
-                  // Height Field
-                  _buildTextField(
-                    controller: _heightController,
-                    hintText: 'Height',
-                    suffix: 'Cm',
-                  ),
-                  
-                  const SizedBox(height: 15),
-                  
-                  // Weight Field
-                  _buildTextField(
-                    controller: _weightController,
-                    hintText: 'Weight',
-                    suffix: 'Kg',
-                    keyboardType: TextInputType.number,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          
-          // Save button at bottom
-          _buildSaveButton(),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildHeader() {
-    return Container(
-      height: 200,
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Color(0xFF2ECC71),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
+      backgroundColor: const Color(0xFFF8FAFC),
+
+      appBar: AppBar(
+        elevation: 0,
+
+        backgroundColor: const Color(0xFF2ECC71),
+
+        title: const Text(
+          'Edit Profil',
+
+          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
         ),
       ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Back button
-          Positioned(
-            top: 50,
-            left: 20,
-            child: InkWell(
-              onTap: () => Navigator.pop(context),
-              child: const Icon(
-                Icons.arrow_back_ios,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-          ),
-          
-          // Profile picture with edit icon
-          Positioned(
-            bottom: -50,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white,
-                  width: 3,
+
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+
+        child: Form(
+          key: _formKey,
+
+          child: Column(
+            children: [
+              // ================= DASAR =================
+              buildSection('Informasi Dasar', [
+                buildField(
+                  label: 'Nama Lengkap',
+                  controller: nameController,
+                  hint: 'Contoh: Zolla Perdana',
                 ),
-              ),
-              child: Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 55,
-                    backgroundColor: Colors.yellow,
-                    backgroundImage: AssetImage(_profileData['photoUrl']),
-                    child: const Icon(
-                      Icons.person,
-                      size: 55,
-                      color: Colors.blue,
+
+                buildField(
+                  label: 'Email',
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  hint: 'Contoh: zolla@gmail.com',
+                ),
+
+                buildField(
+                  label: 'Tanggal Lahir',
+
+                  controller: birthDateController,
+
+                  readOnly: true,
+
+                  suffixIcon: const Icon(Icons.calendar_month),
+
+                  onTap: () async {
+                    final pickedDate = await showDatePicker(
+                      context: context,
+
+                      initialDate: DateTime(2000),
+
+                      firstDate: DateTime(1950),
+
+                      lastDate: DateTime.now(),
+                    );
+
+                    if (pickedDate != null) {
+                      birthDateController.text =
+                          "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
+
+                      calculateAge(pickedDate);
+
+                      setState(() {});
+                    }
+                  },
+                ),
+
+                buildField(
+                  label: 'Umur',
+
+                  controller: ageController,
+
+                  readOnly: true,
+
+                  keyboardType: TextInputType.number,
+                ),
+
+                buildDropdown(
+                  label: 'Jenis Kelamin',
+
+                  value: genderController.text,
+
+                  items: const ['Pria', 'Wanita'],
+
+                  onChanged: (value) {
+                    genderController.text = value ?? '';
+
+                    calculateBMI();
+
+                    setState(() {});
+                  },
+                ),
+
+                buildField(
+                  label: 'Tinggi Badan (cm)',
+
+                  controller: heightController,
+
+                  keyboardType: TextInputType.number,
+
+                  hint: 'Contoh: 170',
+
+                  onChanged: (_) {
+                    calculateBMI();
+                  },
+                ),
+
+                buildField(
+                  label: 'Berat Badan (kg)',
+
+                  controller: weightController,
+
+                  keyboardType: TextInputType.number,
+
+                  hint: 'Contoh: 65',
+
+                  onChanged: (_) {
+                    calculateBMI();
+                  },
+                ),
+              ]),
+
+              // ================= ANALISIS =================
+              buildSection('Analisis Tubuh', [
+                buildField(
+                  label: 'BMI',
+
+                  controller: bmiController,
+
+                  readOnly: true,
+                ),
+
+                buildField(
+                  label: 'Status BMI',
+
+                  controller: bmiStatusController,
+
+                  readOnly: true,
+                ),
+
+                buildField(
+                  label: 'Berat Ideal',
+
+                  controller: idealWeightController,
+
+                  readOnly: true,
+                ),
+
+                buildField(
+                  label: 'Kebutuhan Kalori',
+
+                  controller: caloriesController,
+
+                  readOnly: true,
+                ),
+
+                buildDropdown(
+                  label: 'Activity Level',
+
+                  value: activityController.text,
+
+                  items: const ['Rendah', 'Sedang', 'Tinggi'],
+
+                  onChanged: (value) {
+                    setState(() {
+                      activityController.text = value ?? '';
+                    });
+                  },
+                ),
+
+                buildDropdown(
+                  label: 'Exercise Level',
+
+                  value: exerciseController.text,
+
+                  items: const [
+                    'Jarang',
+                    '1-2x/Minggu',
+                    '3-5x/Minggu',
+                    'Setiap Hari',
+                  ],
+
+                  onChanged: (value) {
+                    setState(() {
+                      exerciseController.text = value ?? '';
+                    });
+                  },
+                ),
+
+                buildDropdown(
+                  label: 'Target Tubuh',
+
+                  value: bodyGoalController.text,
+
+                  items: const [
+                    'Menurunkan Berat Badan',
+                    'Menambah Massa Otot',
+                    'Menjaga Berat Badan',
+                  ],
+
+                  onChanged: (value) {
+                    setState(() {
+                      bodyGoalController.text = value ?? '';
+                    });
+                  },
+                ),
+              ]),
+
+              // ================= NUTRISI =================
+              buildSection('Preferensi Nutrisi', [
+                buildField(
+                  label: 'Tipe Makanan',
+
+                  controller: foodTypeController,
+
+                  hint: 'Contoh: Vegetarian, Vegan, Halal',
+                ),
+
+                buildField(
+                  label: 'Makanan Favorit',
+
+                  controller: favoriteFoodsController,
+
+                  maxLines: 2,
+
+                  hint: 'Contoh: Ayam, Nasi Goreng, Salmon',
+                ),
+
+                buildField(
+                  label: 'Makanan Tidak Disukai',
+
+                  controller: dislikedFoodsController,
+
+                  maxLines: 2,
+
+                  hint: 'Contoh: Brokoli, Susu, Durian',
+                ),
+
+                buildField(
+                  label: 'Alergi',
+
+                  controller: allergiesController,
+
+                  maxLines: 2,
+
+                  hint: 'Contoh: Seafood, Kacang, Telur',
+                ),
+              ]),
+
+              // ================= KESEHATAN =================
+              buildSection('Kondisi Kesehatan', [
+                buildField(
+                  label: 'Riwayat Penyakit',
+
+                  controller: healthController,
+
+                  maxLines: 3,
+
+                  hint: 'Contoh: Diabetes, Hipertensi',
+                ),
+
+                buildField(
+                  label: 'Pola Makan',
+
+                  controller: eatingController,
+
+                  maxLines: 2,
+
+                  hint: 'Contoh: 3x sehari, Intermittent Fasting',
+                ),
+              ]),
+
+              const SizedBox(height: 10),
+
+              // ================= BUTTON =================
+              SizedBox(
+                width: double.infinity,
+
+                child: ElevatedButton(
+                  onPressed: saveProfile,
+
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2ECC71),
+
+                    elevation: 0,
+
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
                     ),
                   ),
-                  
-                  // Edit icon on bottom-right of the avatar
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.edit,
-                        color: const Color(0xFF2ECC71),
-                        size: 20,
-                      ),
+
+                  child: const Text(
+                    'Simpan Profil',
+
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+
+                      fontSize: 16,
+
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-          
-          // User name below avatar
-          Positioned(
-            bottom: 70,
-            child: Text(
-              'Jenny Perdana',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hintText,
-    String? suffix,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              keyboardType: keyboardType,
-              style: const TextStyle(
-                fontSize: 16,
-                fontFamily: 'Poppins',
-              ),
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                hintText: hintText,
-                hintStyle: TextStyle(
-                  color: Colors.grey.shade400,
-                  fontSize: 16,
-                  fontFamily: 'Poppins',
-                ),
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-          if (suffix != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 20),
-              child: Text(
-                suffix,
-                style: TextStyle(
-                  color: Colors.grey.shade400,
-                  fontSize: 16,
-                  fontFamily: 'Poppins',
                 ),
               ),
-            ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildPhoneField() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Row(
-        children: [
-          // Flag container
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Image.asset(
-              'assets/profile/indonesia_flag.png',
-              width: 30,
-              height: 20,
-            ),
-          ),
-          
-          // Divider line
-          Container(
-            width: 1,
-            height: 30,
-            color: Colors.grey.shade300,
-          ),
-          
-          // Phone number input
-          Expanded(
-            child: TextField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              style: const TextStyle(
-                fontSize: 16,
-                fontFamily: 'Poppins',
-              ),
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                hintText: 'Phone Number',
-                hintStyle: TextStyle(
-                  color: Colors.grey.shade400,
-                  fontSize: 16,
-                  fontFamily: 'Poppins',
-                ),
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildDateField() {
-    return GestureDetector(
-      onTap: () => _selectDate(context),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _birthDateController,
-                enabled: false,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontFamily: 'Poppins',
-                ),
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                  hintText: 'Date of birth',
-                  hintStyle: TextStyle(
-                    color: Colors.grey.shade400,
-                    fontSize: 16,
-                    fontFamily: 'Poppins',
-                  ),
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 20),
-              child: Icon(
-                Icons.calendar_today_outlined,
-                color: Colors.grey.shade400,
-                size: 20,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildSaveButton() {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.all(20),
-      child: ElevatedButton(
-        onPressed: _saveProfile,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF2ECC71),
-          padding: const EdgeInsets.symmetric(vertical: 15),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          elevation: 0,
-        ),
-        child: const Text(
-          'Save',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.w500,
+
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ),
     );
-  }
-  
-  void _saveProfile() {
-    // Disini akan ada logika untuk update data ke API
-    
-    // Dummy update untuk data sementara
-    setState(() {
-      _profileData['name'] = _nameController.text;
-      _profileData['phoneNumber'] = _phoneController.text;
-      _profileData['birthDate'] = _birthDateController.text;
-      _profileData['height'] = _heightController.text;
-      _profileData['weight'] = _weightController.text;
-    });
-    
-    // Mock API call with Future.delayed
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return const Center(child: CircularProgressIndicator(color: Color(0xFF2ECC71)));
-      },
-    );
-    
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pop(context); // dismiss dialog
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
-          backgroundColor: Color(0xFF2ECC71),
-        ),
-      );
-      
-      Navigator.pop(context); // back to profile
-    });
   }
 }

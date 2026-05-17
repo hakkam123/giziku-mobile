@@ -269,7 +269,7 @@ class ProfileScreen extends StatelessWidget {
                       label: 'FAQ',
                       color: const Color(0xFFDFF7FF),
 
-                      onTap: () {
+                      onTap: () { 
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (_) => const FAQScreen()),
@@ -281,7 +281,7 @@ class ProfileScreen extends StatelessWidget {
                       icon: Icons.info_outline,
                       label: 'About',
                       color: const Color(0xFFF3E8FF),
-
+  
                       onTap: () {
                         Navigator.push(
                           context,
