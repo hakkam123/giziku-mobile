@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:giziku/screens/simulation_steps/simulation_step1.dart';
+import 'package:giziku/screens/simulation/simulation_budget_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,10 +14,16 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   DateTime selectedDate = DateTime.now();
 
+  final user = FirebaseAuth.instance.currentUser;
+
   @override
   Widget build(BuildContext context) {
     DateTime now = DateTime.now();
     String formattedDate = DateFormat('EEEE, d MMMM yyyy').format(now);
+
+    final String name = user?.displayName ?? "Guest User";
+    final String email = user?.email ?? "No Email";
+    final String photo = user?.photoURL ?? "";
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -27,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 10),
-              _buildHeader(formattedDate),
+              _buildHeader(formattedDate, name, email, photo),
               const SizedBox(height: 15),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -47,7 +54,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeader(String formattedDate) {
+  Widget _buildHeader(
+    String formattedDate,
+    String name,
+    String email,
+    String photo,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
       child: Row(
@@ -58,21 +70,32 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 width: 45,
                 height: 45,
+
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFC857),
-                  borderRadius: BorderRadius.circular(25),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFF2ECC71), width: 2),
                 ),
-                child: const Center(
-                  child: Icon(Icons.person, color: Colors.white, size: 25),
+
+                child: CircleAvatar(
+                  radius: 22,
+                  backgroundColor: const Color(0xFFFFC857),
+
+                  backgroundImage: photo.isNotEmpty
+                      ? NetworkImage(photo)
+                      : null,
+
+                  child: photo.isEmpty
+                      ? const Icon(Icons.person, color: Colors.white, size: 24)
+                      : null,
                 ),
               ),
               const SizedBox(width: 10),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Hello, Jenny!',
-                    style: TextStyle(
+                  Text(
+                    'Hello, $name!',
+                    style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -136,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const SimulationStep1(),
+                  builder: (context) => const SimulationBudgetScreen(),
                 ),
               );
             },
