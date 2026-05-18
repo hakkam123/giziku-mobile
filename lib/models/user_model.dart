@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 enum AuthProvider { email, google }
 
 class UserModel {
@@ -20,14 +22,13 @@ class UserModel {
   final String? exerciseLevel;
 
   // ================= NUTRITION PREFERENCES =================
-  final String? foodType;
+  final List<String>? foodType;
   final String? favoriteFoods;
   final String? dislikedFoods;
-  final String? allergies;
+  final List<String>? allergies;
 
   // ================= HEALTH =================
-  final String? chronicDisease;
-
+  final List<String>? chronicDisease;
   // ================= EATING HABIT =================
   final String? eatingPattern;
 
@@ -141,14 +142,18 @@ class UserModel {
       exerciseLevel: json['exercise_level'],
 
       // ================= FOOD =================
-      foodType: json['food_type'],
+      foodType: json['food_type'] != null
+          ? List<String>.from(json['food_type'])
+          : [],
       favoriteFoods: json['favorite_foods'],
       dislikedFoods: json['disliked_foods'],
-      allergies: json['allergies'],
-
+      allergies: json['allergies'] != null
+          ? List<String>.from(json['allergies'])
+          : [],
       // ================= HEALTH =================
-      chronicDisease: json['chronic_disease'],
-
+      chronicDisease: json['chronic_disease'] != null
+          ? List<String>.from(json['chronic_disease'])
+          : [],
       // ================= HABIT =================
       eatingPattern: json['eating_pattern'],
 
@@ -158,9 +163,7 @@ class UserModel {
       // ================= SYSTEM =================
       age: json['age'],
 
-      bmi: json['bmi'] != null
-          ? (json['bmi'] as num).toDouble()
-          : null,
+      bmi: json['bmi'] != null ? (json['bmi'] as num).toDouble() : null,
 
       bmiCategory: json['bmi_category'],
 
@@ -178,16 +181,14 @@ class UserModel {
       sodiumLimit: json['sodium_limit'],
 
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : DateTime.now(),
+    ? (json['created_at'] as Timestamp).toDate()
+    : DateTime.now(),
 
       updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
-          : DateTime.now(),
+    ? (json['updated_at'] as Timestamp).toDate()
+    : DateTime.now(),
 
-      authProvider: _parseAuthProvider(
-        json['auth_provider'] ?? 'email',
-      ),
+      authProvider: _parseAuthProvider(json['auth_provider'] ?? 'email'),
 
       token: json['token'],
       refreshToken: json['refresh_token'],
@@ -251,8 +252,7 @@ class UserModel {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
 
-      'auth_provider':
-          authProvider.toString().split('.').last,
+      'auth_provider': authProvider.toString().split('.').last,
 
       // ================= TOKEN =================
       'token': token,
@@ -260,9 +260,7 @@ class UserModel {
     };
   }
 
-  static AuthProvider _parseAuthProvider(
-    String provider,
-  ) {
+  static AuthProvider _parseAuthProvider(String provider) {
     switch (provider.toLowerCase()) {
       case 'google':
         return AuthProvider.google;

@@ -41,20 +41,49 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   final bodyGoalController = TextEditingController();
 
-  final foodTypeController = TextEditingController();
-
   final favoriteFoodsController = TextEditingController();
 
   final dislikedFoodsController = TextEditingController();
 
-  final allergiesController = TextEditingController();
-
-  final healthController = TextEditingController();
-
-  final eatingController = TextEditingController();
-
   final birthDateController = TextEditingController();
 
+  final otherAllergyController = TextEditingController();
+
+  final otherDiseaseController = TextEditingController();
+
+  List<String> selectedFoodTypes = [];
+
+  List<String> selectedAllergies = [];
+
+  List<String> selectedDiseases = [];
+
+  final List<String> foodTypes = [
+    'Halal',
+    'Vegetarian',
+    'Vegan',
+    'Keto',
+    'Rendah Gula',
+    'Rendah Garam',
+  ];
+
+  final List<String> allergies = [
+    'Seafood',
+    'Kacang',
+    'Susu',
+    'Telur',
+    'Gluten',
+    'Lainnya',
+  ];
+
+  final List<String> diseases = [
+    'Tidak Ada Penyakit',
+    'Diabetes',
+    'Hipertensi',
+    'Kolesterol',
+    'Asam Urat',
+    'Maag',
+    'Lainnya',
+  ];
   bool isLoading = true;
 
   // ================= INIT =================
@@ -90,11 +119,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       bmiController.text = data['bmi']?.toString() ?? '';
 
-      bmiStatusController.text = data['bmi_status'] ?? '';
+      bmiStatusController.text = data['bmi_category'] ?? '';
 
       idealWeightController.text = data['ideal_weight']?.toString() ?? '';
 
-      caloriesController.text = data['target_calories']?.toString() ?? '';
+      caloriesController.text = data['daily_calories']?.toString() ?? '';
 
       activityController.text = data['activity_level'] ?? '';
 
@@ -102,18 +131,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       bodyGoalController.text = data['body_goal'] ?? '';
 
-      foodTypeController.text = data['food_type'] ?? '';
+      selectedFoodTypes = List<String>.from(data['food_type'] ?? []);
 
       favoriteFoodsController.text = data['favorite_foods'] ?? '';
 
       dislikedFoodsController.text = data['disliked_foods'] ?? '';
 
-      allergiesController.text = data['allergies'] ?? '';
+      selectedAllergies = List<String>.from(data['allergies'] ?? []);
 
-      healthController.text = data['health_condition'] ?? '';
+      otherAllergyController.text = data['other_allergy'] ?? '';
 
-      eatingController.text = data['eating_pattern'] ?? '';
+      otherDiseaseController.text = data['other_disease'] ?? '';
 
+      selectedDiseases = List<String>.from(data['chronic_disease'] ?? []);
       birthDateController.text = data['date_of_birth'] ?? '';
     }
 
@@ -187,43 +217,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> saveProfile() async {
     await FirebaseFirestore.instance.collection('users').doc(uid).set({
       'name': nameController.text,
-
       'email': emailController.text,
+
       'age': int.tryParse(ageController.text),
 
       'gender': genderController.text,
+      'date_of_birth': birthDateController.text,
 
       'height': double.tryParse(heightController.text),
-
       'weight': double.tryParse(weightController.text),
 
-      'bmi': bmiController.text,
-
-      'bmi_status': bmiStatusController.text,
+      'bmi': double.tryParse(bmiController.text),
+      'bmi_category': bmiStatusController.text,
 
       'ideal_weight': double.tryParse(idealWeightController.text),
 
-      'target_calories': int.tryParse(caloriesController.text),
+      'daily_calories': int.tryParse(caloriesController.text),
 
       'activity_level': activityController.text,
-
       'exercise_level': exerciseController.text,
 
       'body_goal': bodyGoalController.text,
 
-      'food_type': foodTypeController.text,
-
+      'food_type': selectedFoodTypes,
       'favorite_foods': favoriteFoodsController.text,
-
       'disliked_foods': dislikedFoodsController.text,
 
-      'allergies': allergiesController.text,
+      'allergies': selectedAllergies,
+      'other_allergy': otherAllergyController.text,
 
-      'health_condition': healthController.text,
-
-      'eating_pattern': eatingController.text,
-
-      'date_of_birth': birthDateController.text,
+      'chronic_disease': selectedDiseases,
+      'other_disease': otherDiseaseController.text,
 
       'updated_at': Timestamp.now(),
     }, SetOptions(merge: true));
@@ -346,6 +370,97 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             borderSide: const BorderSide(color: Color(0xFF2ECC71), width: 2),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget buildMultiSelectChips({
+    required String title,
+    required List<String> options,
+    required List<String> selectedItems,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+
+        children: [
+          Text(
+            title,
+
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+
+            children: options.map((item) {
+              final isSelected = selectedItems.contains(item);
+
+              return FilterChip(
+                label: Text(item),
+
+                selected: isSelected,
+
+                selectedColor: const Color(0xFF2ECC71),
+
+                checkmarkColor: Colors.white,
+
+                labelStyle: TextStyle(
+                  color: isSelected ? Colors.white : Colors.black87,
+                  fontFamily: 'Poppins',
+                ),
+
+                backgroundColor: const Color(0xFFF1F5F9),
+
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+
+                onSelected: (selected) {
+                  setState(() {
+                    // ================= KHUSUS RIWAYAT PENYAKIT =================
+                    if (title == 'Riwayat Penyakit') {
+                      // Kalau pilih "Tidak Ada Penyakit"
+                      if (item == 'Tidak Ada Penyakit') {
+                        if (selected) {
+                          selectedItems.clear();
+                          selectedItems.add(item);
+                        } else {
+                          selectedItems.remove(item);
+                        }
+                      } else {
+                        // Hapus "Tidak Ada Penyakit" kalau pilih penyakit lain
+                        selectedItems.remove('Tidak Ada Penyakit');
+
+                        if (selected) {
+                          selectedItems.add(item);
+                        } else {
+                          selectedItems.remove(item);
+                        }
+                      }
+                    } else {
+                      // ================= DEFAULT =================
+                      if (selected) {
+                        selectedItems.add(item);
+                      } else {
+                        selectedItems.remove(item);
+                      }
+                    }
+                  });
+                },
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
@@ -563,7 +678,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
 
                 buildDropdown(
-                  label: 'Activity Level',
+                  label: 'Tingkat Aktivitas',
 
                   value: activityController.text,
 
@@ -577,7 +692,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
 
                 buildDropdown(
-                  label: 'Exercise Level',
+                  label: 'Tingkat Olahraga',
 
                   value: exerciseController.text,
 
@@ -616,12 +731,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               // ================= NUTRISI =================
               buildSection('Preferensi Nutrisi', [
-                buildField(
-                  label: 'Tipe Makanan',
-
-                  controller: foodTypeController,
-
-                  hint: 'Contoh: Vegetarian, Vegan, Halal',
+                buildMultiSelectChips(
+                  title: 'Tipe Makanan',
+                  options: foodTypes,
+                  selectedItems: selectedFoodTypes,
                 ),
 
                 buildField(
@@ -644,38 +757,43 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   hint: 'Contoh: Brokoli, Susu, Durian',
                 ),
 
-                buildField(
-                  label: 'Alergi',
-
-                  controller: allergiesController,
-
-                  maxLines: 2,
-
-                  hint: 'Contoh: Seafood, Kacang, Telur',
+                buildMultiSelectChips(
+                  title: 'Alergi',
+                  options: allergies,
+                  selectedItems: selectedAllergies,
                 ),
+
+                if (selectedAllergies.contains('Lainnya'))
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: buildField(
+                        label: 'Alergi Lainnya',
+                        controller: otherAllergyController,
+                        hint: 'Contoh: Udang, Kiwi, dll',
+                      ),
+                    ),
+                  ),
               ]),
 
               // ================= KESEHATAN =================
               buildSection('Kondisi Kesehatan', [
-                buildField(
-                  label: 'Riwayat Penyakit',
-
-                  controller: healthController,
-
-                  maxLines: 3,
-
-                  hint: 'Contoh: Diabetes, Hipertensi',
+                buildMultiSelectChips(
+                  title: 'Riwayat Penyakit',
+                  options: diseases,
+                  selectedItems: selectedDiseases,
                 ),
 
-                buildField(
-                  label: 'Pola Makan',
+                if (selectedDiseases.contains('Lainnya')) ...[
+                  const SizedBox(height: 16),
 
-                  controller: eatingController,
-
-                  maxLines: 2,
-
-                  hint: 'Contoh: 3x sehari, Intermittent Fasting',
-                ),
+                  buildField(
+                    label: 'Penyakit Lainnya',
+                    controller: otherDiseaseController,
+                    hint: 'Contoh: Asma, GERD, dll',
+                  ),
+                ],
               ]),
 
               const SizedBox(height: 10),
@@ -703,10 +821,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     'Simpan Profil',
 
                     style: TextStyle(
+                      color: Colors.white,
                       fontFamily: 'Poppins',
-
                       fontSize: 16,
-
                       fontWeight: FontWeight.bold,
                     ),
                   ),

@@ -5,6 +5,7 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -479,7 +480,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Calendar',
+                        'Kalender',
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 20,
@@ -635,7 +636,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.0),
               child: Text(
-                'Recipe Today',
+                'Menu Hari Ini',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -730,17 +731,25 @@ class _HomeScreenState extends State<HomeScreen> {
       clipBehavior: Clip.none,
       children: [
         Container(
+          height: 165,
+
           width: 260,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+
           margin: const EdgeInsets.only(right: 50),
 
           decoration: BoxDecoration(
             color: Colors.white,
+
             borderRadius: BorderRadius.circular(18),
+
             boxShadow: [
               BoxShadow(
                 color: Colors.grey.withOpacity(0.2),
+
                 blurRadius: 12,
+
                 offset: const Offset(0, 6),
               ),
             ],
@@ -748,39 +757,64 @@ class _HomeScreenState extends State<HomeScreen> {
 
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
+
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
 
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    // TITLE
+                    Padding(
+                      padding: const EdgeInsets.only(right: 85),
+
+                      child: Text(
+                        title,
+
+                        maxLines: 2,
+
+                        overflow: TextOverflow.ellipsis,
+
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+
+                          fontSize: 16,
+
+                          fontWeight: FontWeight.bold,
+
+                          height: 1.3,
+                        ),
                       ),
                     ),
 
                     const SizedBox(height: 8),
 
+                    // CALORIES
                     Row(
                       children: [
                         const Icon(
                           Icons.local_fire_department,
+
                           color: Colors.red,
+
                           size: 18,
                         ),
 
                         const SizedBox(width: 4),
 
-                        Text(
-                          calories,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey,
-                            fontFamily: 'Poppins',
+                        Expanded(
+                          child: Text(
+                            calories,
+
+                            overflow: TextOverflow.ellipsis,
+
+                            style: const TextStyle(
+                              fontSize: 10,
+
+                              color: Colors.grey,
+
+                              fontFamily: 'Poppins',
+                            ),
                           ),
                         ),
                       ],
@@ -788,31 +822,43 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     const SizedBox(height: 4),
 
+                    // PRICE
                     Row(
                       children: [
                         const Icon(
                           Icons.attach_money,
+
                           color: Color(0xFF2ECC71),
+
                           size: 18,
                         ),
 
                         const SizedBox(width: 4),
 
-                        Text(
-                          price,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey,
-                            fontFamily: 'Poppins',
+                        Expanded(
+                          child: Text(
+                            price,
+
+                            overflow: TextOverflow.ellipsis,
+
+                            style: const TextStyle(
+                              fontSize: 10,
+
+                              color: Colors.grey,
+
+                              fontFamily: 'Poppins',
+                            ),
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 12),
+                    const Spacer(),
 
+                    // BUTTON
                     SizedBox(
                       width: 110,
+                      height: 36,
 
                       child: ElevatedButton(
                         onPressed: () {},
@@ -824,17 +870,21 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderRadius: BorderRadius.circular(25),
                           ),
 
-                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          padding: EdgeInsets.zero,
 
                           elevation: 0,
                         ),
 
                         child: const Text(
-                          'See Recipe',
+                          'Lihat Resep',
+
                           style: TextStyle(
                             fontFamily: 'Poppins',
+
                             fontSize: 13,
+
                             fontWeight: FontWeight.w600,
+
                             color: Colors.white,
                           ),
                         ),
@@ -852,11 +902,15 @@ class _HomeScreenState extends State<HomeScreen> {
         const Positioned(
           top: 20,
           right: 10,
+
           child: CircleAvatar(
             radius: 60,
+
             backgroundColor: Colors.white,
+
             child: CircleAvatar(
               radius: 56,
+
               backgroundImage: AssetImage('assets/recipe_today.png'),
             ),
           ),

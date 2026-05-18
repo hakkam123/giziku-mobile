@@ -159,7 +159,7 @@ class ProfileDetailScreen extends StatelessWidget {
                                 Expanded(
                                   child: _MiniStat(
                                     title: 'Kalori',
-                                    value: "${v(data['target_calories'])} kcal",
+                                    value: "${v(data['daily_calories'])} kcal",
                                   ),
                                 ),
 
@@ -284,7 +284,7 @@ class ProfileDetailScreen extends StatelessWidget {
                           _InfoTile(
                             icon: Icons.favorite,
                             title: 'Status BMI',
-                            value: v(data['bmi_status']),
+                            value: v(data['bmi_category']),
                           ),
 
                           const _InfoDivider(),
@@ -300,14 +300,14 @@ class ProfileDetailScreen extends StatelessWidget {
                           _InfoTile(
                             icon: Icons.local_fire_department,
                             title: 'Kebutuhan Kalori',
-                            value: v(data['target_calories'], ' kcal'),
+                            value: v(data['daily_calories'], ' kcal'),
                           ),
 
                           const _InfoDivider(),
 
                           _InfoTile(
                             icon: Icons.directions_run,
-                            title: 'Activity Level',
+                            title: 'Tingkat Aktivitas',
                             value: v(data['activity_level']),
                           ),
 
@@ -315,7 +315,7 @@ class ProfileDetailScreen extends StatelessWidget {
 
                           _InfoTile(
                             icon: Icons.sports_gymnastics,
-                            title: 'Exercise Level',
+                            title: 'Tingkat Olahraga',
                             value: v(data['exercise_level']),
                           ),
 
@@ -382,24 +382,7 @@ class ProfileDetailScreen extends StatelessWidget {
                           _InfoTile(
                             icon: Icons.medical_services_outlined,
                             title: 'Riwayat Penyakit',
-                            value: v(data['health_condition']),
-                          ),
-                        ],
-                      ),
-
-                      // ================= KEBIASAAN MAKAN =================
-                      const SizedBox(height: 28),
-
-                      const _SectionTitle(title: 'Kebiasaan Makan'),
-
-                      const SizedBox(height: 18),
-
-                      _infoCard(
-                        children: [
-                          _InfoTile(
-                            icon: Icons.fastfood_outlined,
-                            title: 'Pola Makan',
-                            value: v(data['eating_pattern']),
+                            value: v(data['chronic_disease']),
                           ),
                         ],
                       ),
