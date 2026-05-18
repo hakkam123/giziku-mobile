@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final Widget? nextScreen;
@@ -58,7 +59,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  void _goToNextPage() {
+  Future<void> _goToNextPage() async {
     print(
       "_goToNextPage called, current page: $_currentPage, total pages: ${_pages.length}",
     );
@@ -72,6 +73,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       print(
         "On last page, navigating to main app screen: ${widget.nextScreen.runtimeType}",
       );
+      final prefs = await SharedPreferences.getInstance();
+
+      await prefs.setBool('onboarding_done', true);
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => widget.nextScreen!),

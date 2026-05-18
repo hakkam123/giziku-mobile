@@ -8,6 +8,8 @@ import 'firebase_options.dart';
 
 import 'config/api_config.dart';
 
+import 'screens/auth_wrapper.dart';
+
 import 'screens/onboarding_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/profile_screen.dart';
@@ -127,7 +129,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
-        home: OnboardingScreen(nextScreen: const LoginScreen()),
+        home: const AuthWrapper(),
 
         routes: {
           '/profile': (context) => const ProfileScreen(),

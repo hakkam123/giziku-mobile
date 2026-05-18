@@ -83,9 +83,12 @@ class LoginScreen extends StatelessWidget {
                     if (success) {
                       if (!context.mounted) return;
 
-                      Navigator.pushReplacement(
+                      Navigator.pushAndRemoveUntil(
                         context,
+
                         MaterialPageRoute(builder: (_) => const MainScreen()),
+
+                        (route) => false,
                       );
                     } else {
                       if (!context.mounted) return;
