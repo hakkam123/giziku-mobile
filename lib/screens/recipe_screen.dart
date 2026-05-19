@@ -6,6 +6,8 @@ import '../../models/recipe_model.dart';
 import '../../models/vitamins_model.dart';
 import 'package:giziku/screens/recipe/recipe_detail_screen.dart';
 
+import 'package:intl/intl.dart';
+
 class RecipeScreen extends StatefulWidget {
   const RecipeScreen({super.key});
 
@@ -92,6 +94,14 @@ class _RecipeScreenState extends State<RecipeScreen> {
     }
 
     return 'assets/foods/default.jpg';
+  }
+
+  String formatRupiah(int price) {
+    return NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    ).format(price);
   }
 
   @override
@@ -371,185 +381,189 @@ class _RecipeScreenState extends State<RecipeScreen> {
           MaterialPageRoute(builder: (_) => RecipeDetailScreen(recipe: recipe)),
         );
       },
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-            margin: const EdgeInsets.only(right: 60),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 14,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+
+        padding: const EdgeInsets.all(12),
+
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 70),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          recipe.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+          ],
+        ),
+
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            /// IMAGE
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+
+              child: Image.asset(
+                getFoodImage(recipe.title),
+                width: 105,
+                height: 105,
+                fit: BoxFit.cover,
+              ),
+            ),
+
+            const SizedBox(width: 14),
+
+            /// CONTENT
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /// TOP ROW
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEAFBF1),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+
+                        child: Text(
+                          recipe.category,
                           style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            height: 1.4,
+                            color: Color(0xFF2ECC71),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 10,
                           ),
                         ),
+                      ),
 
-                        const SizedBox(height: 10),
+                      const Spacer(),
 
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.local_fire_department,
-                              color: Colors.red,
-                              size: 18,
-                            ),
+                      Icon(
+                        Icons.bookmark_rounded,
+                        size: 18,
+                        color: Colors.green.shade400,
+                      ),
+                    ],
+                  ),
 
-                            const SizedBox(width: 5),
+                  const SizedBox(height: 10),
 
-                            Text(
-                              "${recipe.calories} kcal",
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                color: Colors.grey.shade600,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
+                  /// TITLE
+                  Text(
+                    recipe.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
 
-                        const SizedBox(height: 6),
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      height: 1.3,
+                    ),
+                  ),
 
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.payments_outlined,
-                              color: Color(0xFF2ECC71),
-                              size: 18,
-                            ),
+                  const SizedBox(height: 10),
 
-                            const SizedBox(width: 5),
+                  /// INFO
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 6,
+                    children: [
+                      _buildMiniTag(
+                        Icons.local_fire_department_rounded,
+                        "${recipe.calories} kcal",
+                        Colors.orange,
+                      ),
 
-                            Text(
-                              "Rp ${recipe.price}",
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                color: Colors.grey.shade600,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
+                      _buildMiniTag(
+                        Icons.star_rounded,
+                        "${recipe.healthScore}/10",
+                        Colors.amber,
+                      ),
 
-                        const SizedBox(height: 14),
+                      _buildMiniTag(
+                        Icons.payments_outlined,
+                        formatRupiah(recipe.price),
+                        const Color(0xFF2ECC71),
+                      ),
+                    ],
+                  ),
 
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2ECC71).withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          child: Text(
-                            "Skor ${recipe.healthScore}/10",
-                            style: const TextStyle(
-                              color: Color(0xFF2ECC71),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
+                  const SizedBox(height: 10),
 
-                        const SizedBox(height: 10),
-
-                        Text(
+                  /// FOOTER
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
                           savedText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+
                           style: TextStyle(
-                            fontFamily: 'Poppins',
                             fontSize: 11,
                             color: Colors.grey.shade500,
                           ),
                         ),
+                      ),
 
-                        const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.all(8),
 
-                        SizedBox(
-                          width: 120,
-                          height: 40,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      RecipeDetailScreen(recipe: recipe),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2ECC71),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                            ),
-                            child: const Text(
-                              "Lihat Resep",
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
 
-          Positioned(
-            top: 22,
-            right: 0,
-            child: Container(
-              width: 125,
-              height: 125,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.12),
-                    blurRadius: 18,
+                        child: const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 13,
+                          color: Color(0xFF2ECC71),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-              child: CircleAvatar(
-                radius: 62,
-                backgroundColor: Colors.white,
-                child: CircleAvatar(
-                  radius: 58,
-                  backgroundImage: AssetImage(getFoodImage(recipe.title)),
-                ),
-              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniTag(IconData icon, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(100),
+      ),
+
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+
+          const SizedBox(width: 4),
+
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
             ),
           ),
         ],
