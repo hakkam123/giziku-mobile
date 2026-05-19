@@ -5,6 +5,9 @@ import '../../models/product_model.dart';
 import '../../models/recipe_model.dart';
 import '../../repositories/product_repository.dart';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/rendering.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
@@ -23,6 +26,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   int _tabIndex = 0;
   List<ProductModel> _buyProducts = [];
   bool _isLoadingBuy = false;
+  bool _isSaved = false;
 
   final Color primary = const Color(0xFF2ECC71);
   final Color secondary = const Color(0xFF27AE60);
@@ -119,41 +123,132 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   @override
   void initState() {
     super.initState();
+
     double lastOffset = 0;
 
-    @override
-    void initState() {
-      super.initState();
+    _scrollController.addListener(() {
+      final currentOffset = _scrollController.offset;
 
-      _scrollController.addListener(() {
-        final currentOffset = _scrollController.offset;
-
-        /// scroll down
-        if (currentOffset > lastOffset + 10) {
-          if (_showBottomBar) {
-            setState(() {
-              _showBottomBar = false;
-            });
-          }
+      if (currentOffset > lastOffset + 10) {
+        if (_showBottomBar) {
+          setState(() {
+            _showBottomBar = false;
+          });
         }
-        /// scroll up
-        else if (currentOffset < lastOffset - 10) {
-          if (!_showBottomBar) {
-            setState(() {
-              _showBottomBar = true;
-            });
-          }
+      } else if (currentOffset < lastOffset - 10) {
+        if (!_showBottomBar) {
+          setState(() {
+            _showBottomBar = true;
+          });
         }
+      }
 
-        lastOffset = currentOffset;
-      });
-    }
+      lastOffset = currentOffset;
+    });
+
+    _checkIfSaved();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _toggleSaveRecipe() async {
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (user == null) return;
+
+  final savedRef = FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid)
+      .collection('saved_recipes');
+
+  final existing = await savedRef
+      .where('title', isEqualTo: widget.recipe.title)
+      .limit(1)
+      .get();
+
+  /// kalau udah ada -> hapus
+  if (existing.docs.isNotEmpty) {
+    await existing.docs.first.reference.delete();
+
+    setState(() {
+      _isSaved = false;
+    });
+  }
+
+  /// kalau belum ada -> simpan
+  else {
+    await savedRef.add({
+      'title': widget.recipe.title,
+      'description': widget.recipe.description,
+      'image_url': widget.recipe.imageUrl,
+      'category': widget.recipe.category,
+
+      'estimated_price': widget.recipe.price,
+      'estimated_calories': widget.recipe.calories,
+
+      'protein': widget.recipe.protein,
+      'carbs': widget.recipe.carbs,
+      'fats': widget.recipe.fats,
+      'sugars': widget.recipe.sugars,
+      'sodium': widget.recipe.sodium,
+      'fiber': widget.recipe.fiber,
+
+      'health_score': widget.recipe.healthScore,
+      'healthy_level': widget.recipe.healthyLevel,
+      'health_insight': widget.recipe.healthInsight,
+      'nutrition_per_serving': widget.recipe.nutritionPerServing,
+
+      'prep_time': widget.recipe.prepTime,
+      'cook_time': widget.recipe.cookTime,
+      'total_time': widget.recipe.totalTime,
+
+      'ingredients': widget.recipe.ingredients
+          .map(
+            (e) => {
+              'name': e.name,
+              'amount': e.amount,
+            },
+          )
+          .toList(),
+
+      'instructions': widget.recipe.instructions,
+
+      'vitamins': {
+        'vitaminA': widget.recipe.vitamins.vitaminA,
+        'vitaminC': widget.recipe.vitamins.vitaminC,
+        'iron': widget.recipe.vitamins.iron,
+      },
+
+      'saved_at': FieldValue.serverTimestamp(),
+    });
+
+    setState(() {
+      _isSaved = true;
+    });
+  }
+}
+
+  Future<void> _checkIfSaved() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) return;
+
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('saved_recipes')
+        .doc(widget.recipe.id)
+        .get();
+
+    if (doc.exists) {
+      setState(() {
+        _isSaved = true;
+      });
+    }
   }
 
   Future<void> _loadBuyIngredients() async {
@@ -600,19 +695,21 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           ),
                         ),
 
-                        Container(
-                          width: 46,
-                          height: 46,
-
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.18),
-
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-
-                          child: const Icon(
-                            Icons.favorite_border_rounded,
-                            color: Colors.white,
+                        GestureDetector(
+                          onTap: _toggleSaveRecipe,
+                          child: Container(
+                            width: 46,
+                            height: 46,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.18),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Icon(
+                              _isSaved
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
