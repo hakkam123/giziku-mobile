@@ -60,7 +60,7 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 10),
 
                         const Text(
-                          "My Profile",
+                          "Profil Saya",
                           style: TextStyle(
                             color: Colors.white70,
                             fontFamily: 'Poppins',
@@ -134,15 +134,15 @@ class ProfileScreen extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
 
                         children: [
-                          _StatItem(value: "3", label: "Members"),
+                          _StatItem(value: "3", label: "Anggota"),
 
                           _DividerVertical(),
 
-                          _StatItem(value: "92%", label: "Healthy"),
+                          _StatItem(value: "92%", label: "Kesehatan"),
 
                           _DividerVertical(),
 
-                          _StatItem(value: "12", label: "Recipes"),
+                          _StatItem(value: "2", label: "Resep"),
                         ],
                       ),
                     ),
@@ -165,7 +165,7 @@ class ProfileScreen extends StatelessWidget {
 
                       children: [
                         const Text(
-                          "Family Members",
+                          "Anggota Keluarga",
                           style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 20,
@@ -177,7 +177,7 @@ class ProfileScreen extends StatelessWidget {
                           onPressed: () {},
 
                           child: const Text(
-                            "See All",
+                            "Lihat Semua",
                             style: TextStyle(
                               color: Color(0xFF2ECC71),
                               fontFamily: 'Poppins',
@@ -200,21 +200,21 @@ class ProfileScreen extends StatelessWidget {
                           _familyCard(
                             context: context,
                             name: "Jenny",
-                            role: "Mother",
+                            role: "Ibu",
                             color: const Color(0xFFE8FFF1),
                           ),
 
                           _familyCard(
                             context: context,
                             name: "Bagas",
-                            role: "Father",
+                            role: "Ayah",
                             color: const Color(0xFFEAF2FF),
                           ),
 
                           _familyCard(
                             context: context,
                             name: "Rara",
-                            role: "Child",
+                            role: "Anak",
                             color: const Color(0xFFFFF4E5),
                           ),
 
@@ -236,7 +236,7 @@ class ProfileScreen extends StatelessWidget {
                   children: [
                     _ProfileMenuItem(
                       icon: Icons.person_outline,
-                      label: 'My Profile',
+                      label: 'Profil Saya',
                       color: const Color(0xFFEEF2FF),
 
                       onTap: () {
@@ -251,7 +251,7 @@ class ProfileScreen extends StatelessWidget {
 
                     _ProfileMenuItem(
                       icon: Icons.groups_2_outlined,
-                      label: 'Family Members',
+                      label: 'Anggota Keluarga',
                       color: const Color(0xFFE8FFF1),
 
                       onTap: () {},
@@ -259,7 +259,7 @@ class ProfileScreen extends StatelessWidget {
 
                     _ProfileMenuItem(
                       icon: Icons.restaurant_menu_outlined,
-                      label: 'Nutrition History',
+                      label: 'Riwayat Nutrisi',
                       color: const Color(0xFFFFF4E5),
 
                       onTap: () {},
@@ -280,7 +280,7 @@ class ProfileScreen extends StatelessWidget {
 
                     _ProfileMenuItem(
                       icon: Icons.info_outline,
-                      label: 'About',
+                      label: 'Tentang',
                       color: const Color(0xFFF3E8FF),
 
                       onTap: () {
@@ -293,20 +293,20 @@ class ProfileScreen extends StatelessWidget {
                       },
                     ),
 
-                    _ProfileMenuItem(
-                      icon: Icons.storefront_outlined,
-                      label: 'My Shop',
-                      color: const Color(0xFFE0F2FE),
+                    // _ProfileMenuItem(
+                    //   icon: Icons.storefront_outlined,
+                    //   label: 'My Shop',
+                    //   color: const Color(0xFFE0F2FE),
 
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const StoreProfileScreen(),
-                          ),
-                        );
-                      },
-                    ),
+                    //   onTap: () {
+                    //     Navigator.push(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //         builder: (_) => const StoreProfileScreen(),
+                    //       ),
+                    //     );
+                    //   },
+                    // ),
                   ],
                 ),
               ),
@@ -569,7 +569,7 @@ Widget _addMemberCard() {
         SizedBox(height: 12),
 
         Text(
-          "Add Member",
+          "Tambah Anggota",
           textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: 'Poppins',

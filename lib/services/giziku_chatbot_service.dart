@@ -7,7 +7,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 
 class GizikuChatbotService {
   final model = GenerativeModel(
-    model: 'models/gemini-2.5-flash',
+    model: 'models/gemini-3.1-flash-lite',
     apiKey: dotenv.env['GEMINI_API_KEY'] ?? '',
     generationConfig: GenerationConfig(temperature: 0.5),
   );

@@ -156,81 +156,75 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   }
 
   Future<void> _toggleSaveRecipe() async {
-  final user = FirebaseAuth.instance.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
 
-  if (user == null) return;
+    if (user == null) return;
 
-  final savedRef = FirebaseFirestore.instance
-      .collection('users')
-      .doc(user.uid)
-      .collection('saved_recipes');
+    final savedRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('saved_recipes');
 
-  final existing = await savedRef
-      .where('title', isEqualTo: widget.recipe.title)
-      .limit(1)
-      .get();
+    final existing = await savedRef
+        .where('title', isEqualTo: widget.recipe.title)
+        .limit(1)
+        .get();
 
-  /// kalau udah ada -> hapus
-  if (existing.docs.isNotEmpty) {
-    await existing.docs.first.reference.delete();
+    /// kalau udah ada -> hapus
+    if (existing.docs.isNotEmpty) {
+      await existing.docs.first.reference.delete();
 
-    setState(() {
-      _isSaved = false;
-    });
+      setState(() {
+        _isSaved = false;
+      });
+    }
+    /// kalau belum ada -> simpan
+    else {
+      await savedRef.add({
+        'title': widget.recipe.title,
+        'description': widget.recipe.description,
+        'image_url': widget.recipe.imageUrl,
+        'category': widget.recipe.category,
+
+        'estimated_price': widget.recipe.price,
+        'estimated_calories': widget.recipe.calories,
+
+        'protein': widget.recipe.protein,
+        'carbs': widget.recipe.carbs,
+        'fats': widget.recipe.fats,
+        'sugars': widget.recipe.sugars,
+        'sodium': widget.recipe.sodium,
+        'fiber': widget.recipe.fiber,
+
+        'health_score': widget.recipe.healthScore,
+        'healthy_level': widget.recipe.healthyLevel,
+        'health_insight': widget.recipe.healthInsight,
+        'nutrition_per_serving': widget.recipe.nutritionPerServing,
+
+        'prep_time': widget.recipe.prepTime,
+        'cook_time': widget.recipe.cookTime,
+        'total_time': widget.recipe.totalTime,
+
+        'ingredients': widget.recipe.ingredients
+            .map((e) => {'name': e.name, 'amount': e.amount})
+            .toList(),
+
+        'instructions': widget.recipe.instructions,
+
+        'vitamins': {
+          'vitaminA': widget.recipe.vitamins.vitaminA,
+          'vitaminC': widget.recipe.vitamins.vitaminC,
+          'iron': widget.recipe.vitamins.iron,
+        },
+
+        'saved_at': FieldValue.serverTimestamp(),
+      });
+
+      setState(() {
+        _isSaved = true;
+      });
+    }
   }
-
-  /// kalau belum ada -> simpan
-  else {
-    await savedRef.add({
-      'title': widget.recipe.title,
-      'description': widget.recipe.description,
-      'image_url': widget.recipe.imageUrl,
-      'category': widget.recipe.category,
-
-      'estimated_price': widget.recipe.price,
-      'estimated_calories': widget.recipe.calories,
-
-      'protein': widget.recipe.protein,
-      'carbs': widget.recipe.carbs,
-      'fats': widget.recipe.fats,
-      'sugars': widget.recipe.sugars,
-      'sodium': widget.recipe.sodium,
-      'fiber': widget.recipe.fiber,
-
-      'health_score': widget.recipe.healthScore,
-      'healthy_level': widget.recipe.healthyLevel,
-      'health_insight': widget.recipe.healthInsight,
-      'nutrition_per_serving': widget.recipe.nutritionPerServing,
-
-      'prep_time': widget.recipe.prepTime,
-      'cook_time': widget.recipe.cookTime,
-      'total_time': widget.recipe.totalTime,
-
-      'ingredients': widget.recipe.ingredients
-          .map(
-            (e) => {
-              'name': e.name,
-              'amount': e.amount,
-            },
-          )
-          .toList(),
-
-      'instructions': widget.recipe.instructions,
-
-      'vitamins': {
-        'vitaminA': widget.recipe.vitamins.vitaminA,
-        'vitaminC': widget.recipe.vitamins.vitaminC,
-        'iron': widget.recipe.vitamins.iron,
-      },
-
-      'saved_at': FieldValue.serverTimestamp(),
-    });
-
-    setState(() {
-      _isSaved = true;
-    });
-  }
-}
 
   Future<void> _checkIfSaved() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -1170,15 +1164,27 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                   ),
                 ),
 
-                child: const Text(
-                  "Makan Makanan Ini",
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.lunch_dining_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
 
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                    SizedBox(width: 10),
+
+                    Text(
+                      "Makan Makanan Ini",
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

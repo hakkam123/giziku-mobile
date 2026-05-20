@@ -36,8 +36,29 @@ class _ScanningScreenState extends State<ScanningScreen>
     startScanning();
   }
 
+  int currentStep = 0;
+
+  final List<String> scanningSteps = [
+    "Mendeteksi jenis makanan",
+    "Menghitung kalori & protein",
+    "Menganalisa kandungan nutrisi",
+    "Membuat Giziku health insight",
+  ];
+
   Future<void> startScanning() async {
-    final result = await ScannerService().scanFood(widget.imageFile);
+    final futureResult = ScannerService().scanFood(widget.imageFile);
+
+    for (int i = 0; i < scanningSteps.length; i++) {
+      await Future.delayed(const Duration(milliseconds: 850));
+
+      if (!mounted) return;
+
+      setState(() {
+        currentStep = i;
+      });
+    }
+
+    final result = await futureResult;
 
     if (!mounted) return;
 
@@ -160,7 +181,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                           SizedBox(width: 8),
 
                           Text(
-                            "AI Vision",
+                            "Giziku Vision",
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -173,32 +194,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                 ],
               ),
 
-              const SizedBox(height: 40),
-
-              /// TITLE
-              const Text(
-                "Sedang Menganalisa Makanan",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF111827),
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              Text(
-                "AI sedang memproses gambar untuk\nmenghitung nutrisi dan kualitas makanan",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey.shade600,
-                  height: 1.6,
-                ),
-              ),
-
-              const SizedBox(height: 34),
+              const SizedBox(height: 36),
 
               /// AI PROCESS CARD
               Container(
@@ -216,15 +212,93 @@ class _ScanningScreenState extends State<ScanningScreen>
                 ),
 
                 child: Column(
-                  children: [
-                    scanningStep("Mendeteksi jenis makanan", true),
+                  children: List.generate(scanningSteps.length, (index) {
+                    final isActive = index <= currentStep;
+                    final isCurrent = index == currentStep;
 
-                    scanningStep("Menghitung kalori & protein", true),
+                    return AnimatedOpacity(
+                      duration: const Duration(milliseconds: 450),
+                      opacity: isActive ? 1 : 0.35,
 
-                    scanningStep("Menganalisa kandungan nutrisi", true),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 450),
+                        margin: const EdgeInsets.only(bottom: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 16,
+                        ),
 
-                    scanningStep("Membuat AI health insight", false),
-                  ],
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(22),
+
+                          border: Border.all(
+                            color: isActive
+                                ? const Color(0xFF2AD882).withOpacity(0.2)
+                                : Colors.transparent,
+                          ),
+
+                          boxShadow: [
+                            BoxShadow(
+                              color: isCurrent
+                                  ? const Color(0xFF2AD882).withOpacity(0.12)
+                                  : Colors.black.withOpacity(0.03),
+                              blurRadius: 18,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+
+                        child: Row(
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 400),
+                              width: 30,
+                              height: 30,
+
+                              decoration: BoxDecoration(
+                                color: isActive
+                                    ? const Color(0xFF2AD882)
+                                    : Colors.grey.shade300,
+                                shape: BoxShape.circle,
+                              ),
+
+                              child: isCurrent
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(7),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Icon(
+                                      isActive
+                                          ? Icons.check
+                                          : Icons.more_horiz_rounded,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                            ),
+
+                            const SizedBox(width: 14),
+
+                            Expanded(
+                              child: Text(
+                                scanningSteps[index],
+                                style: TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: isActive
+                                      ? const Color(0xFF111827)
+                                      : Colors.grey.shade500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
                 ),
               ),
 

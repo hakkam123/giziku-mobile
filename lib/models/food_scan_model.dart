@@ -1,4 +1,5 @@
 import 'vitamins_model.dart';
+
 class FoodScanModel {
   final String foodName;
   final bool isEdible;
@@ -21,6 +22,7 @@ class FoodScanModel {
 
   final String healthInsight;
   final String healthyLevel;
+  final bool fromPredict;
 
   FoodScanModel({
     required this.foodName,
@@ -44,18 +46,16 @@ class FoodScanModel {
 
     required this.healthInsight,
     required this.healthyLevel,
+    this.fromPredict = false,
   });
 
-  factory FoodScanModel.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory FoodScanModel.fromJson(Map<String, dynamic> json) {
     return FoodScanModel(
       foodName: json['foodName'] ?? '',
 
       isEdible: json['isEdible'] ?? true,
 
-      estimatedServing:
-          json['estimatedServing'] ?? '',
+      estimatedServing: json['estimatedServing'] ?? '',
 
       calories: json['calories'] ?? 0,
       protein: json['protein'] ?? 0,
@@ -66,20 +66,16 @@ class FoodScanModel {
       sodium: json['sodium'] ?? 0,
       fiber: json['fiber'] ?? 0,
 
-      nutritionPerServing:
-          json['nutritionPerServing'] ?? '',
+      nutritionPerServing: json['nutritionPerServing'] ?? '',
 
-      vitamins: VitaminsModel.fromJson(
-        json['vitamins'] ?? {},
-      ),
+      vitamins: VitaminsModel.fromJson(json['vitamins'] ?? {}),
 
       healthScore: json['healthScore'] ?? 0,
 
-      healthInsight:
-          json['healthInsight'] ?? '',
+      healthInsight: json['healthInsight'] ?? '',
 
-      healthyLevel:
-          json['healthyLevel'] ?? '',
+      healthyLevel: json['healthyLevel'] ?? '',
+      fromPredict: json['fromPredict'] ?? false,
     );
   }
 }

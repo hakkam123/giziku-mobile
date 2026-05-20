@@ -1,15 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
-
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../models/food_scan_model.dart';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 class ScannerService {
+  final dio = Dio();
+
   final model = GenerativeModel(
     model: 'models/gemini-3.1-flash-lite',
     apiKey: dotenv.env['GEMINI_API_KEY'] ?? '',
@@ -25,7 +27,52 @@ class ScannerService {
     );
 
     final bytes = compressed!;
-    final prompt = '''
+
+    /// model
+
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(image.path, filename: 'scan.jpg'),
+      });
+
+      final response = await dio.post(
+        'https://giziku-backend-production.up.railway.app/predict',
+        data: formData,
+        options: Options(headers: {'Accept': 'application/json'}),
+      );
+
+      final data = response.data;
+
+      print(data);
+
+      final double confidence = (data['confidence'] ?? 0).toDouble();
+
+      print("CONFIDENCE: $confidence");
+
+      /// kalau confidence tinggi
+      if (confidence >= 75) {
+        final detectedFood = data['foodName'];
+
+        return await analyzeWithGemini(bytes, detectedFood);
+      }
+    } catch (e) {
+      print(e);
+    }
+
+    /// fallback full Gemini
+    return await analyzeWithGemini(bytes, null);
+  }
+
+  /// =========================
+  /// GEMINI ANALYZER
+  /// =========================
+
+  Future<FoodScanModel> analyzeWithGemini(
+    Uint8List bytes,
+    String? detectedFood,
+  ) async {
+    final prompt =
+        '''
 Kamu adalah AI nutritionist profesional.
 
 Analisis makanan dari gambar.
@@ -35,6 +82,13 @@ ATURAN:
 - Return JSON valid saja.
 - Jangan gunakan markdown.
 - Jangan tambahkan penjelasan.
+
+${detectedFood != null ? '''
+Makanan telah dikenali oleh AI internal sebagai:
+"$detectedFood"
+
+Gunakan nama makanan tersebut sebagai referensi utama.
+''' : ''}
 
 FORMAT:
 
@@ -75,12 +129,13 @@ KETENTUAN:
 
     String text = response.text ?? '';
 
-    // Hapus markdown json kalau ada
     text = text.replaceAll('```json', '');
     text = text.replaceAll('```', '');
     text = text.trim();
 
     final jsonMap = jsonDecode(text);
+
+    jsonMap['fromPredict'] = detectedFood != null;
 
     return FoodScanModel.fromJson(jsonMap);
   }

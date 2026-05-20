@@ -165,7 +165,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                         ),
 
                         const Text(
-                          "Food Scanner",
+                          "Scan Makanan",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 22,
@@ -187,7 +187,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                   child: Column(
                     children: [
                       const Text(
-                        "Place your food inside the frame",
+                        "Posisikan makanan di dalam bingkai",
                         style: TextStyle(color: Colors.white70, fontSize: 16),
                       ),
 

@@ -65,26 +65,43 @@ class ScannerResultScreen extends StatelessWidget {
   Widget infoTile(String title, String value) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
+
       padding: const EdgeInsets.all(18),
+
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(20),
       ),
+
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
+            flex: 2,
             child: Text(
               title,
               style: TextStyle(color: Colors.grey.shade700, fontSize: 15),
             ),
           ),
 
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.black,
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
+          const SizedBox(width: 12),
+
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+
+              softWrap: true,
+
+              overflow: TextOverflow.visible,
+
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                height: 1.4,
+              ),
             ),
           ),
         ],
@@ -130,7 +147,7 @@ class ScannerResultScreen extends StatelessWidget {
                   const SizedBox(width: 16),
 
                   const Text(
-                    "Hasil AI Scanner",
+                    "Hasil Giziku Scanner",
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 24,
@@ -156,13 +173,30 @@ class ScannerResultScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               /// FOOD NAME
-              Text(
-                result.foodName,
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                children: [
+                  if (result.fromPredict)
+                    Container(
+                      width: 10,
+                      height: 10,
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF2AD882),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+
+                  Expanded(
+                    child: Text(
+                      result.foodName,
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 18),
@@ -234,8 +268,8 @@ class ScannerResultScreen extends StatelessWidget {
 
                               Text(
                                 result.isEdible
-                                    ? "AI mendeteksi makanan masih aman dikonsumsi"
-                                    : "AI mendeteksi kualitas makanan kurang baik",
+                                    ? "Giziku mendeteksi makanan masih aman dikonsumsi"
+                                    : "Giziku mendeteksi kualitas makanan kurang baik",
 
                                 style: TextStyle(
                                   fontSize: 13.5,
@@ -436,7 +470,7 @@ class ScannerResultScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      "AI Insight",
+                      "Giziku Insight",
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 22,
@@ -459,6 +493,129 @@ class ScannerResultScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 30),
+
+              /// AI FEEDBACK CARD
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 12,
+                    ),
+                  ],
+                ),
+
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Apakah hasil Giziku Vision sesuai?",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF111827),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    Text(
+                      "Bantu Giziku meningkatkan akurasi hasil scan makanan.",
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        height: 1.5,
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Terima kasih atas feedback kamu ❤️",
+                                  ),
+                                ),
+                              );
+                            },
+
+                            icon: const Icon(Icons.thumb_up_alt_rounded),
+
+                            label: const Text("Iya"),
+
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2AD882),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+
+                            icon: const Icon(Icons.refresh_rounded),
+
+                            label: const Text("Scan Ulang"),
+
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF111827),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton.icon(
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.white,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(30),
+                              ),
+                            ),
+                            builder: (_) => EditNutritionSheet(result: result),
+                          );
+                        },
+
+                        icon: const Icon(Icons.edit_rounded),
+
+                        label: const Text("Edit Nutrisi"),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 26),
 
               /// BUTTON
               SizedBox(
@@ -546,6 +703,155 @@ class ScannerResultScreen extends StatelessWidget {
               const SizedBox(height: 30),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class EditNutritionSheet extends StatefulWidget {
+  final FoodScanModel result;
+
+  const EditNutritionSheet({super.key, required this.result});
+
+  @override
+  State<EditNutritionSheet> createState() => _EditNutritionSheetState();
+}
+
+class _EditNutritionSheetState extends State<EditNutritionSheet> {
+  late TextEditingController caloriesController;
+  late TextEditingController proteinController;
+  late TextEditingController carbsController;
+  late TextEditingController fatsController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    caloriesController = TextEditingController(
+      text: widget.result.calories.toString(),
+    );
+
+    proteinController = TextEditingController(
+      text: widget.result.protein.toString(),
+    );
+
+    carbsController = TextEditingController(
+      text: widget.result.carbs.toString(),
+    );
+
+    fatsController = TextEditingController(text: widget.result.fats.toString());
+  }
+
+  Widget field(String title, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+
+      child: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+
+        decoration: InputDecoration(
+          labelText: title,
+
+          filled: true,
+          fillColor: Colors.grey.shade100,
+
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 28,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 60,
+              height: 6,
+
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            const Text(
+              "Edit Nutrisi",
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              "Perbaiki hasil scan jika ada data yang kurang sesuai.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade600, height: 1.5),
+            ),
+
+            const SizedBox(height: 28),
+
+            field("Kalori", caloriesController),
+
+            field("Protein", proteinController),
+
+            field("Karbohidrat", carbsController),
+
+            field("Lemak", fatsController),
+
+            const SizedBox(height: 12),
+
+            SizedBox(
+              width: double.infinity,
+              height: 58,
+
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Perubahan nutrisi berhasil disimpan!"),
+                    ),
+                  );
+                },
+
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2AD882),
+                  elevation: 0,
+
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+
+                child: const Text(
+                  "Simpan Perubahan",
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

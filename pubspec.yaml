@@ -171,4 +171,4 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/gizikulogo.png"
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/gizikulogo.png"
+  adaptive_icon_foreground: "assets/icon.png"
