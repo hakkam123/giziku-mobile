@@ -623,51 +623,120 @@ class ScannerResultScreen extends StatelessWidget {
                 height: 64,
                 child: ElevatedButton(
                   onPressed: () async {
-                    final user = FirebaseAuth.instance.currentUser;
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (_) {
+                        return Dialog(
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 28,
+                              vertical: 32,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(
+                                  width: 60,
+                                  height: 60,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 5,
+                                    color: Color(0xFF2AD882),
+                                  ),
+                                ),
 
-                    if (user == null) return;
+                                const SizedBox(height: 24),
 
-                    final today = DateFormat(
-                      'yyyy-MM-dd',
-                    ).format(DateTime.now());
+                                const Text(
+                                  "Menambahkan Nutrisi...",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
 
-                    final docRef = FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(user.uid)
-                        .collection('daily_nutrition')
-                        .doc(today);
+                                const SizedBox(height: 10),
 
-                    await FirebaseFirestore.instance.runTransaction((
-                      transaction,
-                    ) async {
-                      final snapshot = await transaction.get(docRef);
-
-                      if (!snapshot.exists) {
-                        transaction.set(docRef, {
-                          'calories': result.calories,
-                          'protein': result.protein,
-                          'carbs': result.carbs,
-                          'fats': result.fats,
-                          'updated_at': FieldValue.serverTimestamp(),
-                        });
-                      } else {
-                        final data = snapshot.data()!;
-
-                        transaction.update(docRef, {
-                          'calories': (data['calories'] ?? 0) + result.calories,
-                          'protein': (data['protein'] ?? 0) + result.protein,
-                          'carbs': (data['carbs'] ?? 0) + result.carbs,
-                          'fats': (data['fats'] ?? 0) + result.fats,
-                          'updated_at': FieldValue.serverTimestamp(),
-                        });
-                      }
-                    });
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Nutrisi berhasil ditambahkan!"),
-                      ),
+                                Text(
+                                  "Mohon tunggu sebentar ya ✨",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     );
+
+                    try {
+                      final user = FirebaseAuth.instance.currentUser;
+
+                      if (user == null) return;
+
+                      final today = DateFormat(
+                        'yyyy-MM-dd',
+                      ).format(DateTime.now());
+
+                      final docRef = FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(user.uid)
+                          .collection('daily_nutrition')
+                          .doc(today);
+
+                      await FirebaseFirestore.instance.runTransaction((
+                        transaction,
+                      ) async {
+                        final snapshot = await transaction.get(docRef);
+
+                        if (!snapshot.exists) {
+                          transaction.set(docRef, {
+                            'calories': result.calories,
+                            'protein': result.protein,
+                            'carbs': result.carbs,
+                            'fats': result.fats,
+                            'updated_at': FieldValue.serverTimestamp(),
+                          });
+                        } else {
+                          final data = snapshot.data()!;
+
+                          transaction.update(docRef, {
+                            'calories':
+                                (data['calories'] ?? 0) + result.calories,
+                            'protein': (data['protein'] ?? 0) + result.protein,
+                            'carbs': (data['carbs'] ?? 0) + result.carbs,
+                            'fats': (data['fats'] ?? 0) + result.fats,
+                            'updated_at': FieldValue.serverTimestamp(),
+                          });
+                        }
+                      });
+
+                      await Future.delayed(const Duration(seconds: 2));
+
+                      Navigator.pop(context);
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Nutrisi berhasil ditambahkan!"),
+                        ),
+                      );
+
+                      Navigator.pop(context);
+                    } catch (e) {
+                      Navigator.pop(context);
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Terjadi kesalahan: $e")),
+                      );
+                    }
                   },
 
                   style: ElevatedButton.styleFrom(

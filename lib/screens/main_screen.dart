@@ -147,77 +147,72 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
       body: _screens[_selectedIndex],
-      bottomNavigationBar: PhysicalModel(
-        color: Colors.transparent,
-        elevation: 12,
-        shadowColor: Colors.black.withOpacity(0.3),
-        child: CurvedNavigationBar(
-          key: _bottomNavigationKey,
-          index: _selectedIndex,
-          height: 60,
-          backgroundColor: Colors.transparent,
-          color: const Color(0xFF2AD882),
-          buttonBackgroundColor: const Color(0xFF2AD882),
-          animationCurve: Curves.easeInOut,
-          animationDuration: const Duration(milliseconds: 300),
-          items: const [
-            Icon(
-              Icons.home,
-              size: 30,
-              color: Color.fromARGB(255, 255, 255, 255),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).padding.bottom,
+          ),
+          child: PhysicalModel(
+            color: Colors.transparent,
+            elevation: 12,
+            shadowColor: Colors.black.withOpacity(0.3),
+            child: CurvedNavigationBar(
+              key: _bottomNavigationKey,
+              index: _selectedIndex,
+              height: 60,
+              backgroundColor: Colors.transparent,
+              color: const Color(0xFF2AD882),
+              buttonBackgroundColor: const Color(0xFF2AD882),
+              animationCurve: Curves.easeInOut,
+              animationDuration: const Duration(milliseconds: 300),
+              items: const [
+                Icon(Icons.home, size: 30, color: Colors.white),
+                Icon(Icons.restaurant_menu, size: 30, color: Colors.white),
+                Icon(
+                  Icons.document_scanner_rounded,
+                  size: 32,
+                  color: Colors.white,
+                ),
+                Icon(Icons.chat_rounded, size: 30, color: Colors.white),
+                Icon(Icons.person_outline, size: 30, color: Colors.white),
+              ],
+              onTap: (index) async {
+                // PROFILE boleh dibuka kapan aja
+                if (index == 4) {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+
+                  return;
+                }
+
+                final profileComplete = await checkProfileCompleted();
+
+                if (!profileComplete) {
+                  _bottomNavigationKey.currentState?.setPage(_selectedIndex);
+
+                  return;
+                }
+
+                // ================= SCANNER =================
+                if (index == 2) {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ScannerScreen()),
+                  );
+
+                  _bottomNavigationKey.currentState?.setPage(_selectedIndex);
+
+                  return;
+                }
+
+                // ================= NORMAL TAB =================
+                setState(() {
+                  _selectedIndex = index;
+                });
+              },
             ),
-            Icon(
-              Icons.restaurant_menu,
-              size: 30,
-              color: Color.fromARGB(255, 255, 255, 255),
-            ),
-            Icon(Icons.document_scanner_rounded, size: 32, color: Colors.white),
-            Icon(
-              Icons.chat_rounded,
-              size: 30,
-              color: Color.fromARGB(255, 255, 255, 255),
-            ),
-            Icon(
-              Icons.person_outline,
-              size: 30,
-              color: Color.fromARGB(255, 255, 255, 255),
-            ),
-          ],
-          onTap: (index) async {
-            // PROFILE boleh dibuka kapan aja
-            if (index == 4) {
-              setState(() {
-                _selectedIndex = index;
-              });
-
-              return;
-            }
-
-            final profileComplete = await checkProfileCompleted();
-
-            if (!profileComplete) {
-              _bottomNavigationKey.currentState?.setPage(_selectedIndex);
-
-              return;
-            }
-
-            // ================= SCANNER =================
-            if (index == 2) {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ScannerScreen()),
-              );
-
-              _bottomNavigationKey.currentState?.setPage(_selectedIndex);
-
-              return;
-            }
-
-            // ================= NORMAL TAB =================
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
+          ),
         ),
       ),
     );
