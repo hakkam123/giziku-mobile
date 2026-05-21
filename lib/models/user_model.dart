@@ -1,57 +1,195 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+enum AuthProvider { email, google }
+
 class UserModel {
+  // ================= AUTH =================
   final String id;
   final String name;
   final String email;
   final String? photoUrl;
   final String? phoneNumber;
-  final double? height; // dalam cm
-  final double? weight; // dalam kg
+
+  // ================= BASIC INFORMATION =================
+  final String? gender;
+  final String? dateOfBirth;
+
+  // ================= BODY ANALYSIS =================
+  final double? height;
+  final double? weight;
+
+  final String? activityLevel;
+  final String? exerciseLevel;
+
+  // ================= NUTRITION PREFERENCES =================
+  final List<String>? foodType;
+  final String? favoriteFoods;
+  final String? dislikedFoods;
+  final List<String>? allergies;
+
+  // ================= HEALTH =================
+  final List<String>? chronicDisease;
+  // ================= EATING HABIT =================
+  final String? eatingPattern;
+
+  // ================= FITNESS TARGET =================
+  final String? bodyGoal;
+
+  // ================= SYSTEM CALCULATED =================
   final int? age;
-  final String? gender; // 'male', 'female', 'other'
-  final int? targetCalories;
+
+  final double? bmi;
+  final String? bmiCategory;
+
+  final double? idealWeight;
+
+  final int? dailyCalories;
+
+  final int? proteinNeed;
+  final int? carbNeed;
+  final int? fatNeed;
+
+  final int? sugarLimit;
+  final int? sodiumLimit;
+
+  // ================= SYSTEM =================
   final DateTime createdAt;
   final DateTime updatedAt;
+
   final AuthProvider authProvider;
-  final String? token; // Authentication token
-  final String? refreshToken; // Refresh token
+
+  // ================= TOKEN =================
+  final String? token;
+  final String? refreshToken;
 
   UserModel({
     required this.id,
     required this.name,
     required this.email,
+
     this.photoUrl,
     this.phoneNumber,
+
+    this.gender,
+    this.dateOfBirth,
+
     this.height,
     this.weight,
+
+    this.activityLevel,
+    this.exerciseLevel,
+
+    this.foodType,
+    this.favoriteFoods,
+    this.dislikedFoods,
+    this.allergies,
+
+    this.chronicDisease,
+
+    this.eatingPattern,
+
+    this.bodyGoal,
+
     this.age,
-    this.gender,
-    this.targetCalories,
+
+    this.bmi,
+    this.bmiCategory,
+
+    this.idealWeight,
+
+    this.dailyCalories,
+
+    this.proteinNeed,
+    this.carbNeed,
+    this.fatNeed,
+
+    this.sugarLimit,
+    this.sodiumLimit,
+
     required this.createdAt,
     required this.updatedAt,
+
     required this.authProvider,
+
     this.token,
     this.refreshToken,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] ?? '',
+      // ================= AUTH =================
+      id: json['id']?.toString() ?? '',
       name: json['name'] ?? '',
       email: json['email'] ?? '',
+
       photoUrl: json['photo_url'],
       phoneNumber: json['phone_number'],
-      height: json['height']?.toDouble(),
-      weight: json['weight']?.toDouble(),
-      age: json['age'],
+
+      // ================= BASIC =================
       gender: json['gender'],
-      targetCalories: json['target_calories'],
-      createdAt: json['created_at'] != null 
-        ? DateTime.parse(json['created_at']) 
-        : DateTime.now(),
-      updatedAt: json['updated_at'] != null 
-        ? DateTime.parse(json['updated_at']) 
-        : DateTime.now(),
+      dateOfBirth: json['date_of_birth'],
+
+      // ================= BODY =================
+      height: json['height'] != null
+          ? (json['height'] as num).toDouble()
+          : null,
+
+      weight: json['weight'] != null
+          ? (json['weight'] as num).toDouble()
+          : null,
+
+      activityLevel: json['activity_level'],
+      exerciseLevel: json['exercise_level'],
+
+      // ================= FOOD =================
+      foodType: json['food_type'] != null
+          ? List<String>.from(json['food_type'])
+          : [],
+      favoriteFoods: json['favorite_foods'],
+      dislikedFoods: json['disliked_foods'],
+      allergies: json['allergies'] != null
+          ? List<String>.from(json['allergies'])
+          : [],
+      // ================= HEALTH =================
+      chronicDisease: json['chronic_disease'] != null
+          ? List<String>.from(json['chronic_disease'])
+          : [],
+      // ================= HABIT =================
+      eatingPattern: json['eating_pattern'],
+
+      // ================= GOAL =================
+      bodyGoal: json['body_goal'],
+
+      // ================= SYSTEM =================
+      age: json['age'],
+
+      bmi: json['bmi'] != null ? (json['bmi'] as num).toDouble() : null,
+
+      bmiCategory: json['bmi_category'],
+
+      idealWeight: json['ideal_weight'] != null
+          ? (json['ideal_weight'] as num).toDouble()
+          : null,
+
+      dailyCalories: json['daily_calories'],
+
+      proteinNeed: json['protein_need'],
+      carbNeed: json['carb_need'],
+      fatNeed: json['fat_need'],
+
+      sugarLimit: json['sugar_limit'],
+      sodiumLimit: json['sodium_limit'],
+
+      createdAt: json['created_at'] != null
+    ? (json['created_at'] as Timestamp).toDate()
+    : DateTime.now(),
+
+      updatedAt: json['updated_at'] != null
+    ? (json['updated_at'] as Timestamp).toDate()
+    : DateTime.now(),
+
       authProvider: _parseAuthProvider(json['auth_provider'] ?? 'email'),
+
       token: json['token'],
       refreshToken: json['refresh_token'],
     );
@@ -59,74 +197,77 @@ class UserModel {
 
   Map<String, dynamic> toJson() {
     return {
+      // ================= AUTH =================
       'id': id,
       'name': name,
       'email': email,
+
       'photo_url': photoUrl,
       'phone_number': phoneNumber,
+
+      // ================= BASIC =================
+      'gender': gender,
+      'date_of_birth': dateOfBirth,
+
+      // ================= BODY =================
       'height': height,
       'weight': weight,
+
+      'activity_level': activityLevel,
+      'exercise_level': exerciseLevel,
+
+      // ================= FOOD =================
+      'food_type': foodType,
+      'favorite_foods': favoriteFoods,
+      'disliked_foods': dislikedFoods,
+      'allergies': allergies,
+
+      // ================= HEALTH =================
+      'chronic_disease': chronicDisease,
+
+      // ================= HABIT =================
+      'eating_pattern': eatingPattern,
+
+      // ================= GOAL =================
+      'body_goal': bodyGoal,
+
+      // ================= SYSTEM =================
       'age': age,
-      'gender': gender,
-      'target_calories': targetCalories,
+
+      'bmi': bmi,
+      'bmi_category': bmiCategory,
+
+      'ideal_weight': idealWeight,
+
+      'daily_calories': dailyCalories,
+
+      'protein_need': proteinNeed,
+      'carb_need': carbNeed,
+      'fat_need': fatNeed,
+
+      'sugar_limit': sugarLimit,
+      'sodium_limit': sodiumLimit,
+
+      // ================= SYSTEM =================
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+
       'auth_provider': authProvider.toString().split('.').last,
-      if (token != null) 'token': token,
-      if (refreshToken != null) 'refresh_token': refreshToken,
+
+      // ================= TOKEN =================
+      'token': token,
+      'refresh_token': refreshToken,
     };
   }
 
   static AuthProvider _parseAuthProvider(String provider) {
     switch (provider.toLowerCase()) {
-      case 'email':
-        return AuthProvider.email;
       case 'google':
         return AuthProvider.google;
+
+      case 'email':
       default:
         return AuthProvider.email;
     }
   }
-  
-  // Membuat salinan objek dengan beberapa perubahan
-  UserModel copyWith({
-    String? id,
-    String? name,
-    String? email,
-    String? photoUrl,
-    String? phoneNumber,
-    double? height,
-    double? weight,
-    int? age,
-    String? gender,
-    int? targetCalories,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    AuthProvider? authProvider,
-    String? token,
-    String? refreshToken,
-  }) {
-    return UserModel(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      email: email ?? this.email,
-      photoUrl: photoUrl ?? this.photoUrl,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      height: height ?? this.height,
-      weight: weight ?? this.weight,
-      age: age ?? this.age,
-      gender: gender ?? this.gender,
-      targetCalories: targetCalories ?? this.targetCalories,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      authProvider: authProvider ?? this.authProvider,
-      token: token ?? this.token,
-      refreshToken: refreshToken ?? this.refreshToken,
-    );
-  }
-}
-
-enum AuthProvider {
-  email,
-  google,
 }
